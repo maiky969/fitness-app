@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<title>Иконка Fitness App</title>
+<style>
+  /* Исходник иконки. ?pad=1 рисует вариант с полями (maskable). */
+  html, body { margin: 0; background: #04060d; }
+  .tile {
+    inline-size: 1024px; block-size: 1024px; position: relative; overflow: hidden;
+    background:
+      radial-gradient(90% 70% at 50% 0%, rgba(52,118,255,.55), transparent 65%),
+      radial-gradient(70% 50% at 100% 100%, rgba(120,86,255,.38), transparent 62%),
+      #04060d;
+    display: grid; place-items: center;
+  }
+  .rank {
+    inline-size: 430px; block-size: 430px; rotate: 45deg;
+    border: 18px solid #a78bff; background: rgba(167,139,255,.2);
+    box-shadow: 0 0 120px 0 rgba(150,120,255,.75), inset 0 0 90px -20px rgba(150,120,255,.8);
+    display: grid; place-items: center;
+  }
+  /* Знак повышения уровня: двойной шеврон вверх */
+  .rank svg {
+    rotate: -45deg; inline-size: 250px; block-size: 250px; fill: none; stroke: #f4f0ff;
+    stroke-width: 2.6; stroke-linecap: square; stroke-linejoin: miter;
+    filter: drop-shadow(0 0 22px rgba(150,120,255,.95));
+  }
+  .pad .rank { scale: .78; }
+  .c { position: absolute; inline-size: 120px; block-size: 120px; border: 14px solid #8cc6ff; filter: drop-shadow(0 0 22px rgba(77,163,255,.9)); }
+  .c.tl { top: 92px; left: 92px; border-right: 0; border-bottom: 0; }
+  .c.br { bottom: 92px; right: 92px; border-left: 0; border-top: 0; }
+  .pad .c { display: none; }
+</style>
+</head>
+<body>
+<div class="tile" id="tile"><i class="c tl"></i><i class="c br"></i><div class="rank"><svg viewBox="0 0 24 24"><path d="m5 12 7-7 7 7M5 19l7-7 7 7" /></svg></div></div>
+<script>if (location.search.includes('pad=1')) document.getElementById('tile').classList.add('pad');</script>
+</body>
+</html>

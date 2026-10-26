@@ -1,0 +1,3707 @@
+/* Fitness App — «Путь в гору».
+   Тёплый песок, лесной и шалфейный зелёный, охра. Плоский пейзаж слоями.
+   Светлая тема по умолчанию, тёмная — по системе или вручную (data-theme). */
+
+/* ---------- Токены ---------- */
+
+:root {
+  color-scheme: light;
+
+  --bg: #efe8db;
+  --bg-sunk: #e5dccb;
+  --surface: #f8f4ec;
+  --ink: #1d2721;
+  --ink-2: #46544a;
+  --ink-3: #5b675e;
+  --line: rgba(29, 39, 33, 0.12);
+  --line-strong: rgba(29, 39, 33, 0.28);
+
+  --forest: #2e4a3b;
+  --forest-ink: #f4efe5;
+  --sage: #a9b89c;
+  --sage-ink: #1d2721;
+  --ochre: #d6a259;
+  --ochre-ink: #2a1f10;
+  --accent: #b5772a; /* охра для текста и линий: контраст 4.6:1 на песке */
+  --good: #3c7a4c;
+  --bad: #a8402f;
+
+  --tile-strength: #2e4a3b;
+  --tile-strength-ink: #f4efe5;
+  --tile-strength-mark: #4b6b57;
+  --tile-core: #d6a259;
+  --tile-core-ink: #2a1f10;
+  --tile-core-mark: #e6bd7c;
+  --tile-stretch: #a9b89c;
+  --tile-stretch-ink: #1d2721;
+  --tile-stretch-mark: #c2cfb6;
+
+  /* Пейзаж */
+  --m-sky: #eadcc3;
+  --m-sky-2: #f1e6d3;
+  --m-sun: #df9f4f;
+  --m-far: #cdcdb4;
+  --m-mid: #a9b494;
+  --m-main: #74896a;
+  --m-shade: #5d7256;
+  --m-snow: #f3ecdf;
+  --m-fore: #3f5b47;
+  --m-fore-2: #2e4a3b;
+  --m-water: #c9cdb8;
+  --m-water-2: #dcd9c6;
+  --m-trail: rgba(243, 236, 223, 0.75);
+  --m-trail-done: #f8f1e3;
+  --m-marker: #df9f4f;
+  --m-camp: rgba(243, 236, 223, 0.92);
+  --m-camp-ink: #2e4a3b;
+
+  --glass: rgba(248, 244, 236, 0.72);
+  --shadow: 0 12px 32px -12px rgba(46, 52, 38, 0.28);
+  --shadow-soft: 0 6px 18px -10px rgba(46, 52, 38, 0.22);
+
+  --font-display: 'Geologica', 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-text: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --r-s: 12px;
+  --r-m: 20px;
+  --r-l: 28px;
+  --r-xl: 34px;
+
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 28px;
+  --s-7: 40px;
+  --s-8: 56px;
+
+  --gutter: 20px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --tabbar-h: 64px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #121815;
+    --bg-sunk: #0c110e;
+    --surface: #1b2420;
+    --ink: #ece6d9;
+    --ink-2: #c3c0b2;
+    --ink-3: #9a9d90;
+    --line: rgba(236, 230, 217, 0.12);
+    --line-strong: rgba(236, 230, 217, 0.3);
+    --forest: #b7cca6;
+    --forest-ink: #14201a;
+    --sage: #3c4b39;
+    --sage-ink: #ece6d9;
+    --ochre: #e0b46b;
+    --ochre-ink: #241a0c;
+    --accent: #e3b56c;
+    --good: #8fc79a;
+    --bad: #ef8f7d;
+    --tile-strength: #284034;
+    --tile-strength-ink: #ece6d9;
+    --tile-strength-mark: #355445;
+    --tile-core: #6a5130;
+    --tile-core-ink: #f6e7cc;
+    --tile-core-mark: #7e6239;
+    --tile-stretch: #38463a;
+    --tile-stretch-ink: #ece6d9;
+    --tile-stretch-mark: #445545;
+    --m-sky: #1a2420;
+    --m-sky-2: #212d27;
+    --m-sun: #ead2a0;
+    --m-far: #26332c;
+    --m-mid: #2d3c33;
+    --m-main: #3a4f42;
+    --m-shade: #304337;
+    --m-snow: #c9cfc0;
+    --m-fore: #1f2d25;
+    --m-fore-2: #18241e;
+    --m-water: #1d2823;
+    --m-water-2: #24312a;
+    --m-trail: rgba(201, 207, 192, 0.5);
+    --m-trail-done: #e6dcc6;
+    --m-marker: #e3b56c;
+    --m-camp: rgba(26, 36, 32, 0.9);
+    --m-camp-ink: #e6dcc6;
+    --glass: rgba(27, 36, 32, 0.72);
+    --shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.6);
+    --shadow-soft: 0 6px 18px -10px rgba(0, 0, 0, 0.5);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #121815;
+  --bg-sunk: #0c110e;
+  --surface: #1b2420;
+  --ink: #ece6d9;
+  --ink-2: #c3c0b2;
+  --ink-3: #9a9d90;
+  --line: rgba(236, 230, 217, 0.12);
+  --line-strong: rgba(236, 230, 217, 0.3);
+  --forest: #b7cca6;
+  --forest-ink: #14201a;
+  --sage: #3c4b39;
+  --sage-ink: #ece6d9;
+  --ochre: #e0b46b;
+  --ochre-ink: #241a0c;
+  --accent: #e3b56c;
+  --good: #8fc79a;
+  --bad: #ef8f7d;
+  --tile-strength: #284034;
+  --tile-strength-ink: #ece6d9;
+  --tile-strength-mark: #355445;
+  --tile-core: #6a5130;
+  --tile-core-ink: #f6e7cc;
+  --tile-core-mark: #7e6239;
+  --tile-stretch: #38463a;
+  --tile-stretch-ink: #ece6d9;
+  --tile-stretch-mark: #445545;
+  --m-sky: #1a2420;
+  --m-sky-2: #212d27;
+  --m-sun: #ead2a0;
+  --m-far: #26332c;
+  --m-mid: #2d3c33;
+  --m-main: #3a4f42;
+  --m-shade: #304337;
+  --m-snow: #c9cfc0;
+  --m-fore: #1f2d25;
+  --m-fore-2: #18241e;
+  --m-water: #1d2823;
+  --m-water-2: #24312a;
+  --m-trail: rgba(201, 207, 192, 0.5);
+  --m-trail-done: #e6dcc6;
+  --m-marker: #e3b56c;
+  --m-camp: rgba(26, 36, 32, 0.9);
+  --m-camp-ink: #e6dcc6;
+  --glass: rgba(27, 36, 32, 0.72);
+  --shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.6);
+  --shadow-soft: 0 6px 18px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- База ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  min-block-size: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: 1rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 400ms var(--ease-out), color 400ms var(--ease-out);
+}
+
+h1,
+h2,
+h3,
+p,
+ol,
+ul,
+dl,
+dd,
+figure {
+  margin: 0;
+}
+
+ol,
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-inline-size: 100%;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--ochre);
+  color: var(--ochre-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+input {
+  caret-color: var(--accent);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.sprite {
+  position: absolute;
+  inline-size: 0;
+  block-size: 0;
+  overflow: hidden;
+}
+
+.sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.icon {
+  inline-size: 22px;
+  block-size: 22px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Каркас ---------- */
+
+.app {
+  min-block-size: 100dvh;
+}
+
+.main {
+  inline-size: 100%;
+  max-inline-size: 560px;
+  margin-inline: auto;
+  padding-inline: max(var(--gutter), env(safe-area-inset-left)) max(var(--gutter), env(safe-area-inset-right));
+  padding-block-end: calc(var(--tabbar-h) + 40px + env(safe-area-inset-bottom));
+}
+
+.topbar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  max-inline-size: 560px;
+  margin-inline: auto;
+  padding: calc(env(safe-area-inset-top) + 10px) var(--gutter) 10px 10px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  backdrop-filter: blur(18px) saturate(1.3);
+}
+
+.topbar.is-root {
+  padding-inline-start: var(--gutter);
+}
+
+.topbar.is-root .topbar-back {
+  display: none;
+}
+
+.topbar-back {
+  display: grid;
+  place-items: center;
+  inline-size: 44px;
+  block-size: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  transition: background-color 180ms var(--ease-out);
+}
+
+.topbar-back:active {
+  background: var(--line);
+}
+
+.topbar-title {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  outline: none;
+}
+
+.screen {
+  padding-block-start: var(--s-3);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+/* Нижняя панель: матовое стекло поверх содержимого, которое под ней листается */
+.tabbar {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: calc(env(safe-area-inset-bottom) + 12px);
+  z-index: 30;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-1);
+  inline-size: min(340px, calc(100% - 2 * var(--gutter)));
+  block-size: var(--tabbar-h);
+  margin-inline: auto;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  backdrop-filter: blur(22px) saturate(1.5);
+  box-shadow: var(--shadow);
+}
+
+.tabbar-item {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 999px;
+  color: var(--ink-3);
+  font-size: 0.6875rem;
+  font-weight: 550;
+  text-decoration: none;
+  transition: color 220ms var(--ease-out);
+}
+
+.tabbar-item .icon {
+  inline-size: 22px;
+  block-size: 22px;
+}
+
+.tabbar-item[aria-current='page'] {
+  color: var(--forest-ink);
+}
+
+.tabbar-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--forest);
+  opacity: 0;
+  scale: 0.7;
+  transition: opacity 260ms var(--ease-out), scale 420ms var(--ease-out);
+}
+
+.tabbar-item[aria-current='page']::before {
+  opacity: 1;
+  scale: 1;
+}
+
+.tabbar.is-hidden {
+  translate: 0 calc(100% + 40px);
+}
+
+.tabbar {
+  transition: translate 420ms var(--ease-out);
+}
+
+/* ---------- Сегодня ---------- */
+
+.screen-today {
+  padding-block-start: 0;
+}
+
+.today-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-block: calc(env(safe-area-inset-top) + 18px) var(--s-2);
+}
+
+.today-date {
+  color: var(--ink-3);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.hello {
+  margin-block-start: var(--s-1);
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 12.5vw, 3.5rem);
+  font-weight: 700;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.hello span {
+  display: block;
+}
+
+.hello .hello-name {
+  color: var(--forest);
+}
+
+.rank-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-block-start: 22px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  color: var(--ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.rank-letter {
+  display: grid;
+  place-items: center;
+  inline-size: 30px;
+  block-size: 30px;
+  border-radius: 50%;
+  background: var(--forest);
+  color: var(--forest-ink);
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+/* Гора: выходит за поля колонки до краёв экрана */
+.mountain {
+  position: relative;
+  margin-inline: calc(-1 * max(var(--gutter), env(safe-area-inset-left)));
+  margin-block-start: var(--s-2);
+  overflow: hidden;
+  /* Небо растворяется в фоне сверху, вода — снизу */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14%, #000 90%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 14%, #000 90%, transparent 100%);
+}
+
+.mountain-svg {
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 390 / 330;
+}
+
+.mountain-svg .layer {
+  transform-box: fill-box;
+  will-change: transform;
+}
+
+.m-sky { fill: var(--m-sky); }
+.m-sky-2 { fill: var(--m-sky-2); }
+.m-sun { fill: var(--m-sun); }
+.m-far { fill: var(--m-far); }
+.m-mid { fill: var(--m-mid); }
+.m-main { fill: var(--m-main); }
+.m-shade { fill: var(--m-shade); }
+.m-snow { fill: var(--m-snow); }
+.m-fore { fill: var(--m-fore); }
+.m-fore-2 { fill: var(--m-fore-2); }
+.m-water { fill: var(--m-water); }
+.m-water-2 { fill: var(--m-water-2); }
+
+.mountain-svg * {
+  transition: fill 400ms var(--ease-out);
+}
+
+.mountain-trail {
+  fill: none;
+  stroke: var(--m-trail);
+  stroke-width: 1.6;
+  stroke-dasharray: 2 5;
+  stroke-linecap: round;
+}
+
+.mountain-trail-done {
+  fill: none;
+  stroke: var(--m-trail-done);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.camp circle {
+  fill: var(--m-camp);
+}
+
+.camp text {
+  fill: var(--m-camp-ink);
+  font-family: var(--font-display);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.camp.is-reached circle {
+  fill: var(--m-trail-done);
+}
+
+.camp.is-reached text {
+  fill: var(--m-fore-2);
+}
+
+.marker-pulse {
+  fill: var(--m-marker);
+  opacity: 0.35;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulse 2.4s var(--ease-out) infinite;
+}
+
+.marker-dot {
+  fill: var(--m-marker);
+  stroke: var(--m-trail-done);
+  stroke-width: 2;
+}
+
+@keyframes pulse {
+  0% {
+    scale: 0.6;
+    opacity: 0.5;
+  }
+  100% {
+    scale: 2.2;
+    opacity: 0;
+  }
+}
+
+/* Подпись «ты здесь» — стекло поверх неба */
+.altitude {
+  position: absolute;
+  inset-block-start: 36px;
+  inset-inline-start: max(var(--gutter), env(safe-area-inset-left));
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px 11px;
+  border: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+  border-radius: var(--r-m);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: var(--shadow-soft);
+}
+
+.altitude-xp {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.altitude-xp small {
+  margin-inline-start: 4px;
+  color: var(--ink-3);
+  font-family: var(--font-text);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.altitude-next {
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.altitude-bar {
+  inline-size: 132px;
+  block-size: 4px;
+  margin-block-start: 6px;
+  border-radius: 99px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.altitude-bar span {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transform-origin: left;
+}
+
+/* Серия и неделя: одна полоса под горой */
+.streak-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-block: var(--s-4) var(--s-5);
+}
+
+.streak {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-inline-size: 0;
+}
+
+.streak .icon {
+  color: var(--accent);
+  inline-size: 24px;
+  block-size: 24px;
+}
+
+.streak.is-cold .icon {
+  color: var(--ink-3);
+}
+
+.streak-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.streak-text b {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.streak-text span {
+  color: var(--ink-3);
+  font-size: 0.75rem;
+}
+
+.week {
+  display: flex;
+  gap: 5px;
+}
+
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-3);
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.week-dot {
+  inline-size: 22px;
+  block-size: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-strong);
+}
+
+.week-day.is-on .week-dot {
+  border-color: var(--forest);
+  background: var(--forest);
+}
+
+.week-day.is-today {
+  color: var(--ink);
+}
+
+.week-day.is-today .week-dot {
+  border-color: var(--ink);
+}
+
+.week-day.is-today.is-on .week-dot {
+  border-color: var(--forest);
+}
+
+/* Плитки разделов: одна широкая и две половинки */
+.tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-3);
+}
+
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-block-size: 168px;
+  padding: var(--s-5);
+  border-radius: var(--r-l);
+  overflow: hidden;
+  color: var(--ink);
+  text-decoration: none;
+  isolation: isolate;
+  transition: scale 380ms var(--ease-out), box-shadow 380ms var(--ease-out);
+}
+
+.tile:active {
+  scale: 0.97;
+}
+
+.tile-wide {
+  grid-column: 1 / -1;
+  min-block-size: 188px;
+}
+
+.tile-strength {
+  background: var(--tile-strength);
+  color: var(--tile-strength-ink);
+  --mark: var(--tile-strength-mark);
+}
+
+.tile-core {
+  background: var(--tile-core);
+  color: var(--tile-core-ink);
+  --mark: var(--tile-core-mark);
+}
+
+.tile-stretch {
+  background: var(--tile-stretch);
+  color: var(--tile-stretch-ink);
+  --mark: var(--tile-stretch-mark);
+}
+
+.tile-art {
+  position: absolute;
+  inset-block-start: -8px;
+  inset-inline-end: -8px;
+  z-index: -1;
+  inline-size: 128px;
+  block-size: 128px;
+  fill: var(--mark);
+  stroke: none;
+}
+
+.tile-wide .tile-art {
+  inline-size: 176px;
+  block-size: 176px;
+  inset-block-start: -20px;
+  inset-inline-end: -12px;
+}
+
+.tile-title {
+  font-family: var(--font-display);
+  font-size: 1.625rem;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.tile-wide .tile-title {
+  font-size: 2rem;
+}
+
+.tile-sub {
+  margin-block-start: var(--s-1);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.35;
+  opacity: 0.86;
+}
+
+.tile-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.tile-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tile-state .icon {
+  inline-size: 15px;
+  block-size: 15px;
+  stroke-width: 2.4;
+}
+
+.tile-go {
+  display: grid;
+  place-items: center;
+  inline-size: 40px;
+  block-size: 40px;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.tile-go .icon {
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+/* Совет дня под плитками */
+.today-note {
+  margin-block-start: var(--s-5);
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.today-note b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---------- Общие компоненты ---------- */
+
+.group-title {
+  margin-block: var(--s-5) 0;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+
+.stack > .group-title:first-child {
+  margin-block-start: 0;
+}
+
+.group-sub {
+  margin-inline-start: var(--s-1);
+  color: var(--ink-3);
+  font-family: var(--font-text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.note {
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  text-wrap: pretty;
+}
+
+/* Панель — спокойная поверхность для связанных вещей. Без вложенных панелей. */
+.sys {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  border-radius: var(--r-l);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.sys-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.sys-head .icon {
+  display: none;
+}
+
+.sys-title {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.sys-text {
+  color: var(--ink);
+  font-size: 0.9375rem;
+  text-wrap: pretty;
+}
+
+.sys-text-dim {
+  color: var(--ink-2);
+}
+
+.sys-actions {
+  display: flex;
+  gap: var(--s-2);
+  margin-block-start: var(--s-1);
+}
+
+.sys-actions .btn {
+  flex: 1;
+}
+
+/* Кнопки */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-block-size: 52px;
+  padding: 0 var(--s-6);
+  border: 0;
+  border-radius: 999px;
+  background: var(--forest);
+  color: var(--forest-ink);
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: scale 260ms var(--ease-out), background-color 220ms var(--ease-out), opacity 220ms;
+}
+
+.btn:active {
+  scale: 0.97;
+}
+
+.btn .icon {
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+.btn-block {
+  inline-size: 100%;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--line-strong);
+}
+
+.btn-danger {
+  align-self: flex-start;
+  min-block-size: 44px;
+  padding: 0 var(--s-1);
+  background: transparent;
+  color: var(--bad);
+}
+
+.btn.is-armed {
+  background: var(--bad);
+  color: #fff8f0;
+  box-shadow: none;
+}
+
+.btn-danger.is-armed {
+  padding-inline: var(--s-5);
+}
+
+.btn-section {
+  margin-block-start: var(--s-2);
+}
+
+.back-link {
+  display: none;
+}
+
+/* Строки «подпись — значение» */
+.rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding-block: 12px;
+  border-block-end: 1px solid var(--line);
+}
+
+.row:last-child {
+  border-block-end: 0;
+}
+
+.row dt {
+  color: var(--ink-2);
+}
+
+.row dd {
+  font-weight: 600;
+  text-align: end;
+}
+
+.row dd.is-empty,
+.is-empty {
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.row-stack dd {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.row-note {
+  display: block;
+  color: var(--ink-3);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.rows-flat {
+  padding-inline: var(--s-5);
+  border-radius: var(--r-l);
+  background: var(--surface);
+}
+
+/* Списки */
+.list {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-l);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.list > li + li {
+  border-block-start: 1px solid var(--line);
+}
+
+.history-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-block-size: 60px;
+  padding: 12px var(--s-4) 12px var(--s-5);
+  text-decoration: none;
+  transition: background-color 180ms var(--ease-out);
+}
+
+a.history-row:active {
+  background: var(--bg-sunk);
+}
+
+.history-row .icon {
+  color: var(--ink-3);
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+.history-row.is-static {
+  padding-inline-end: var(--s-5);
+}
+
+.history-date {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+  font-weight: 600;
+}
+
+.history-what {
+  color: var(--ink-3);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.history-sum {
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  text-align: end;
+}
+
+.lift-sum {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.lift-now {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Строка упражнения с миниатюрой */
+.ex-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 10px var(--s-4) 10px 10px;
+  text-decoration: none;
+  transition: background-color 180ms var(--ease-out);
+}
+
+.ex-row:active {
+  background: var(--bg-sunk);
+}
+
+.ex-thumb {
+  inline-size: 64px;
+  block-size: 52px;
+  flex: none;
+  border-radius: var(--r-s);
+  background: #fff;
+  object-fit: cover;
+}
+
+.ex-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.ex-name {
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.ex-sub {
+  color: var(--ink-3);
+  font-size: 0.8125rem;
+}
+
+.ex-row > .icon {
+  color: var(--ink-3);
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+.tag {
+  display: inline-block;
+  margin-inline-start: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--ochre);
+  color: var(--ochre-ink);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  vertical-align: 2px;
+}
+
+/* Раскрывающиеся пояснения */
+.folds {
+  border-radius: var(--r-l);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.fold + .fold {
+  border-block-start: 1px solid var(--line);
+}
+
+.fold summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-block-size: 56px;
+  padding-inline: var(--s-5) var(--s-4);
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+
+.fold summary::-webkit-details-marker {
+  display: none;
+}
+
+.fold summary .icon {
+  color: var(--ink-3);
+  inline-size: 18px;
+  block-size: 18px;
+  transition: rotate 260ms var(--ease-out);
+}
+
+.fold[open] summary .icon {
+  rotate: 90deg;
+}
+
+.fold-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: 0 var(--s-5) var(--s-5);
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+}
+
+.fold-links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.link {
+  color: var(--ink);
+  text-decoration-color: var(--accent);
+  text-underline-offset: 3px;
+}
+
+.fold.more {
+  border-radius: var(--r-l);
+  background: var(--surface);
+}
+
+.fold.more .list {
+  border-radius: 0;
+}
+
+/* На половинках плиток стрелка не помещается: вся плитка и так кнопка */
+.tile:not(.tile-wide) .tile-go {
+  display: none;
+}
+
+/* Переключатель из нескольких вариантов */
+.seg {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--bg-sunk);
+}
+
+.seg-btn {
+  flex: 1;
+  min-block-size: 44px;
+  padding-inline: var(--s-2);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background-color 260ms var(--ease-out), color 260ms var(--ease-out), box-shadow 260ms var(--ease-out);
+}
+
+.seg-btn[aria-checked='true'],
+.seg-btn[aria-pressed='true'] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-soft);
+}
+
+/* ---------- Силовые: список тренировок ---------- */
+
+.pick-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  min-block-size: 76px;
+  padding: var(--s-3) var(--s-4) var(--s-3) var(--s-3);
+  text-decoration: none;
+  transition: background-color 180ms var(--ease-out);
+}
+
+.pick-row:active {
+  background: var(--bg-sunk);
+}
+
+.pick-row > .icon {
+  color: var(--ink-3);
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+.letter {
+  display: grid;
+  place-items: center;
+  inline-size: 52px;
+  block-size: 52px;
+  flex: none;
+  border-radius: 16px;
+  background: var(--tile-strength);
+  color: var(--tile-strength-ink);
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 700;
+}
+
+.letter.is-done {
+  background: var(--good);
+  color: var(--bg);
+}
+
+/* Главная карточка силовых: та же зелень, что у плитки на главном */
+.lead {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-6) var(--s-5) var(--s-5);
+  border-radius: var(--r-xl);
+  background: var(--tile-strength);
+  color: var(--tile-strength-ink);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.lead-letter {
+  position: absolute;
+  inset-block-start: -0.18em;
+  inset-inline-end: -0.04em;
+  z-index: -1;
+  color: var(--tile-strength-mark);
+  font-family: var(--font-display);
+  font-size: 11rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.lead-title {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.lead-sub {
+  font-size: 0.875rem;
+  opacity: 0.86;
+}
+
+.lead-list {
+  display: flex;
+  flex-direction: column;
+  margin-block: var(--s-3) var(--s-2);
+  counter-reset: lead;
+}
+
+.lead-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-block: 9px;
+  border-block-start: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+  font-size: 0.9375rem;
+}
+
+.lead-list li > span:last-child {
+  flex: none;
+  opacity: 0.8;
+}
+
+.lead-actions {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.btn-light {
+  flex: 1;
+  background: var(--tile-strength-ink);
+  color: var(--tile-strength);
+}
+
+.btn-light-ghost {
+  background: transparent;
+  color: inherit;
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, currentColor 35%, transparent);
+  padding-inline: var(--s-5);
+}
+
+/* Шапка записи подходов: счётчик и полоса */
+.session-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.session-count {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+}
+
+.session-count b {
+  margin-inline-end: 6px;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.session-bar {
+  display: block;
+  block-size: 6px;
+  border-radius: 99px;
+  background: var(--bg-sunk);
+  overflow: hidden;
+}
+
+.session-bar span {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--forest);
+  transform-origin: left;
+  transition: transform 600ms var(--ease-out);
+}
+
+/* Итог тренировки */
+.done-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-6) var(--s-5) var(--s-5);
+  border-radius: var(--r-xl);
+  background: var(--tile-strength);
+  color: var(--tile-strength-ink);
+}
+
+.done-xp {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  color: var(--ochre);
+  font-family: var(--font-display);
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+}
+
+.done-xp span {
+  color: var(--tile-strength-ink);
+  font-family: var(--font-text);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  opacity: 0.8;
+}
+
+.done-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.done-sub {
+  font-size: 0.9375rem;
+  opacity: 0.86;
+}
+
+.done-card .btn-light {
+  margin-block-start: var(--s-3);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .done-card.is-fresh .done-xp {
+    animation: pop 900ms 200ms var(--ease-out) both;
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    scale: 0.6;
+    filter: blur(8px);
+  }
+}
+
+/* Кор: заголовок и круг из 13 тренировок */
+.core-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.core-title {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.core-sub {
+  color: var(--ink-2);
+  font-size: 0.875rem;
+}
+
+.ring {
+  display: grid;
+  grid-template-columns: repeat(13, minmax(0, 1fr));
+  gap: 4px;
+  margin-block-start: var(--s-3);
+}
+
+.ring li {
+  display: contents;
+}
+
+.ring-step {
+  padding: 0;
+  border: 0;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--bg-sunk);
+  color: var(--ink-3);
+  font-size: 0.625rem;
+  font-weight: 650;
+}
+
+.ring-step.is-done {
+  background: var(--ochre);
+  color: var(--ochre-ink);
+}
+
+.ring-step.is-today {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--accent);
+  color: var(--ink);
+}
+
+.ring-step:disabled {
+  cursor: default;
+}
+
+/* Палец толще кружка: зона касания расширена невидимой рамкой */
+.ring-step:not(:disabled) {
+  position: relative;
+  transition: scale 260ms var(--ease-out), background-color 220ms var(--ease-out);
+}
+
+.ring-step:not(:disabled)::after {
+  content: '';
+  position: absolute;
+  inset: -8px -2px;
+}
+
+.ring-step:not(:disabled):active {
+  scale: 0.85;
+}
+
+.text-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Растяжка ---------- */
+
+.lead-stretch {
+  background: var(--tile-stretch);
+  color: var(--tile-stretch-ink);
+}
+
+.lead-stretch .btn-light {
+  background: var(--tile-stretch-ink);
+  color: var(--tile-stretch);
+}
+
+.ex-row.is-static:active {
+  background: transparent;
+}
+
+.rules {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-5);
+  border-radius: var(--r-l);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+}
+
+.rules li {
+  position: relative;
+  padding-inline-start: 18px;
+  text-wrap: pretty;
+}
+
+.rules li::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 0.6em;
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: 50%;
+  background: var(--sage);
+}
+
+.routines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.routine {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-5);
+  border-radius: var(--r-l);
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: var(--shadow-soft);
+  transition: scale 380ms var(--ease-out);
+}
+
+.routine:active {
+  scale: 0.98;
+}
+
+.routine.is-suggested {
+  background: var(--tile-stretch);
+  color: var(--tile-stretch-ink);
+}
+
+.routine-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.routine-title {
+  font-family: var(--font-display);
+  font-size: 1.625rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+}
+
+.routine-about {
+  font-size: 0.9375rem;
+  opacity: 0.86;
+}
+
+.routine-meta {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.routine-thumbs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin-block-start: var(--s-3);
+}
+
+.routine-thumbs img {
+  inline-size: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+/* Плеер: весь экран, телефон лежит рядом на коврике */
+.screen-run {
+  padding-block-start: 0;
+}
+
+.run {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-block-size: calc(100dvh - env(safe-area-inset-bottom) - 40px);
+  padding-block: calc(env(safe-area-inset-top) + 10px) var(--s-4);
+}
+
+.run-top {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.run-close {
+  display: grid;
+  place-items: center;
+  inline-size: 44px;
+  block-size: 44px;
+  flex: none;
+  margin-inline-start: -10px;
+  border-radius: 50%;
+  color: var(--ink);
+}
+
+.run-steps {
+  display: flex;
+  flex: 1;
+  gap: 3px;
+}
+
+.run-steps li {
+  flex: 1;
+  block-size: 4px;
+  border-radius: 99px;
+  background: var(--bg-sunk);
+  overflow: hidden;
+}
+
+.run-steps li.is-done {
+  background: var(--forest);
+}
+
+.run-steps li span {
+  display: block;
+  block-size: 100%;
+  background: var(--forest);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+/* Два кадра упражнения сменяют друг друга: видно движение в позу */
+.run-photo {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  border-radius: var(--r-l);
+  overflow: hidden;
+  background: var(--bg-sunk);
+  margin-inline: calc(-1 * var(--s-2));
+}
+
+.run-photo img {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.run-photo-b {
+  animation: frames 5s var(--ease-in-out) infinite;
+}
+
+.run-photo.is-next img {
+  filter: saturate(0.6);
+  opacity: 0.85;
+}
+
+.run-photo figcaption {
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-start: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: var(--ink);
+  font-size: 0.8125rem;
+  font-weight: 650;
+}
+
+@keyframes frames {
+  0%,
+  35% {
+    opacity: 0;
+  }
+  50%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.run-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.run-title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.run-side {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--tile-stretch);
+  color: var(--tile-stretch-ink);
+  font-size: 0.8125rem;
+  font-weight: 650;
+}
+
+.run-how {
+  margin-block-start: 4px;
+  color: var(--ink);
+  font-size: 0.9375rem;
+  text-wrap: pretty;
+}
+
+.run-feel {
+  color: var(--ink-3);
+  font-size: 0.8125rem;
+}
+
+.run-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block-start: auto;
+  padding-inline: var(--s-2);
+}
+
+.run-btn {
+  display: grid;
+  place-items: center;
+  inline-size: 56px;
+  block-size: 56px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-soft);
+  transition: scale 260ms var(--ease-out), opacity 200ms;
+}
+
+.run-btn:active {
+  scale: 0.9;
+}
+
+.run-btn:disabled {
+  opacity: 0.35;
+}
+
+.run-btn .icon {
+  fill: currentColor;
+  stroke-width: 1.5;
+}
+
+/* Круглый таймер — он же кнопка паузы */
+.run-clock {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  inline-size: min(176px, 44vw);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  transition: scale 300ms var(--ease-out);
+}
+
+.run-clock:active {
+  scale: 0.96;
+}
+
+.run-ring {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  rotate: -90deg;
+}
+
+.run-ring-track {
+  fill: var(--surface);
+  stroke: var(--bg-sunk);
+  stroke-width: 10;
+}
+
+.run-ring-fill {
+  fill: none;
+  stroke: var(--forest);
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+
+.run-clock.is-gap .run-ring-fill {
+  stroke: var(--ochre);
+}
+
+.run-sec {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.run-state {
+  position: relative;
+  color: var(--ink-3);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.run-clock.is-paused .run-sec {
+  opacity: 0.45;
+}
+
+.run-clock.is-paused .run-state {
+  color: var(--accent);
+}
+
+.run-done {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s-3);
+  min-block-size: calc(100dvh - 80px);
+  margin-inline: calc(-1 * max(var(--gutter), env(safe-area-inset-left)));
+  padding: var(--s-7) var(--gutter);
+  background: var(--tile-stretch);
+  color: var(--tile-stretch-ink);
+}
+
+.run-done .done-xp span {
+  color: var(--tile-stretch-ink);
+}
+
+.run-done .btn-light {
+  flex: none;
+  margin-block-start: var(--s-4);
+  background: var(--tile-stretch-ink);
+  color: var(--tile-stretch);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .run-done .done-xp {
+    animation: pop 900ms 150ms var(--ease-out) both;
+  }
+}
+
+@media (max-height: 700px) {
+  .run-photo {
+    aspect-ratio: 16 / 9;
+  }
+
+  .run-clock {
+    inline-size: 140px;
+  }
+
+  .run-sec {
+    font-size: 2.75rem;
+  }
+}
+
+/* ---------- Упражнение ---------- */
+
+.ex-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.ex-title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.ex-meta {
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+}
+
+.ex-meta-dim {
+  color: var(--ink-3);
+}
+
+.photos {
+  display: grid;
+  gap: var(--s-2);
+}
+
+@media (min-width: 600px) {
+  .photos {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.photo {
+  position: relative;
+  border-radius: var(--r-m);
+  background: #fff;
+  overflow: hidden;
+}
+
+.photo img {
+  inline-size: 100%;
+  block-size: auto;
+  max-block-size: 320px;
+  object-fit: contain;
+}
+
+.photo figcaption {
+  position: absolute;
+  inset-block-start: 10px;
+  inset-inline-start: 10px;
+  display: grid;
+  place-items: center;
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: 50%;
+  background: var(--forest);
+  color: var(--forest-ink);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  counter-reset: step;
+}
+
+.steps li {
+  position: relative;
+  padding-inline-start: 40px;
+  counter-increment: step;
+  text-wrap: pretty;
+}
+
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: -1px;
+  display: grid;
+  place-items: center;
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: 50%;
+  background: var(--bg-sunk);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+/* ---------- Запись тренировки ---------- */
+
+.set-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-2) var(--s-4);
+  border-radius: var(--r-l);
+  background: var(--surface);
+}
+
+.set-group > .ex-row {
+  border-radius: var(--r-m);
+}
+
+.set-prev,
+.set-hint {
+  padding-inline: var(--s-3);
+  color: var(--ink-2);
+  font-size: 0.875rem;
+}
+
+.set-hint.is-up {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.sets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin-block-start: var(--s-1);
+  padding-inline: var(--s-2);
+}
+
+.set {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr) 52px;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.set-no {
+  color: var(--ink-3);
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-align: center;
+}
+
+.set-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.set-none {
+  color: var(--ink-3);
+  font-size: 0.875rem;
+}
+
+.field-input {
+  inline-size: 100%;
+  min-block-size: 48px;
+  padding: 0 40px 0 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg);
+  font-size: 1.0625rem; /* меньше 16px айфон приближает экран */
+  font-weight: 600;
+  transition: border-color 180ms var(--ease-out), background-color 180ms var(--ease-out);
+}
+
+.field-input:focus {
+  border-color: var(--forest);
+  outline: none;
+}
+
+.field-input[aria-invalid='true'] {
+  border-color: var(--bad);
+}
+
+.field-unit {
+  position: absolute;
+  inset-inline-end: 12px;
+  color: var(--ink-3);
+  font-size: 0.8125rem;
+  pointer-events: none;
+}
+
+.set.is-done .field-input {
+  border-color: transparent;
+  background: transparent;
+  color: var(--ink-2);
+}
+
+.set-done {
+  display: grid;
+  place-items: center;
+  inline-size: 52px;
+  block-size: 48px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--ink-3);
+  transition: background-color 220ms var(--ease-out), color 220ms var(--ease-out), scale 260ms var(--ease-out);
+}
+
+.set-done:active {
+  scale: 0.92;
+}
+
+.set.is-current .set-done {
+  border-color: var(--forest);
+  background: var(--forest);
+  color: var(--forest-ink);
+}
+
+.set.is-done .set-done {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--good) 16%, transparent);
+  color: var(--good);
+}
+
+.set-done .icon {
+  stroke-width: 2.4;
+}
+
+.set .field-error {
+  grid-column: 2 / -1;
+}
+
+.field-error,
+.form-error {
+  color: var(--bad);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+/* Таймер отдыха: стекло над краем экрана, на месте нижней панели */
+.rest {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: calc(env(safe-area-inset-bottom) + 12px);
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  inline-size: min(520px, calc(100% - 2 * var(--gutter)));
+  margin-inline: auto;
+  padding: 12px 12px 12px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-l);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  backdrop-filter: blur(22px) saturate(1.5);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  animation: rise 520ms var(--ease-out);
+}
+
+.rest-line {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  block-size: 3px;
+  background: var(--line);
+}
+
+.rest-line span {
+  display: block;
+  block-size: 100%;
+  background: var(--accent);
+  transform-origin: left;
+}
+
+.rest-main {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.rest-label {
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.rest-time {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.rest-actions {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.rest-btn {
+  min-block-size: 44px;
+  padding-inline: var(--s-4);
+  font-size: 0.875rem;
+}
+
+.rest.is-over .rest-line span {
+  background: var(--good);
+}
+
+.rest.is-over .rest-label {
+  color: var(--good);
+}
+
+/* Запись в истории */
+.log-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px var(--s-5);
+}
+
+.log-name {
+  font-weight: 600;
+}
+
+.log-sets {
+  color: var(--ink-2);
+  font-size: 0.875rem;
+}
+
+/* ---------- Кор ---------- */
+
+.video {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--r-l);
+  background: #0c110e;
+  overflow: hidden;
+  margin-inline: calc(-1 * var(--s-2));
+}
+
+.video video {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.video-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  color: #d8d3c6;
+  font-size: 0.9375rem;
+  text-align: center;
+}
+
+.video-state .btn-ghost {
+  color: #ece6d9;
+  box-shadow: inset 0 0 0 1.5px rgba(236, 230, 217, 0.4);
+}
+
+.core-status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.core-status .icon {
+  color: var(--good);
+  stroke-width: 2.4;
+}
+
+/* ---------- Прогресс ---------- */
+
+.meters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding: var(--s-5);
+  border-radius: var(--r-l);
+  background: var(--surface);
+}
+
+.meter-head {
+  display: flex;
+  justify-content: space-between;
+  margin-block-end: var(--s-2);
+  font-size: 0.9375rem;
+}
+
+.meter-name {
+  font-weight: 600;
+}
+
+.meter-value {
+  color: var(--ink-2);
+}
+
+.meter-bar {
+  display: flex;
+  gap: 4px;
+}
+
+.meter-bar span {
+  flex: 1;
+  block-size: 8px;
+  border-radius: 99px;
+  background: var(--bg-sunk);
+}
+
+.meter-bar span.is-on {
+  background: var(--forest);
+}
+
+.cal-wrap {
+  padding: var(--s-4);
+  border-radius: var(--r-l);
+  background: var(--surface);
+}
+
+.cal {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.cal-wd {
+  padding-block-end: var(--s-1);
+  color: var(--ink-3);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.cal-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-block-size: 46px;
+  padding-block: 6px 4px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 180ms var(--ease-out);
+}
+
+.cal-day.is-future {
+  color: var(--ink-3);
+}
+
+.cal-day.is-today {
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.cal-day.is-active {
+  background: var(--bg-sunk);
+}
+
+.cal-marks {
+  display: flex;
+  gap: 3px;
+  block-size: 8px;
+  align-items: center;
+}
+
+.mark {
+  display: inline-block;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+}
+
+.mark-full {
+  background: var(--forest);
+}
+
+.mark-part {
+  box-shadow: inset 0 0 0 1.5px var(--forest);
+}
+
+.mark-core {
+  background: var(--ochre);
+}
+
+.mark-stretch {
+  background: var(--sage);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--ink) 25%, transparent);
+}
+
+.cal-read {
+  margin-block-start: var(--s-3);
+  padding-inline: var(--s-1);
+  color: var(--ink-2);
+  font-size: 0.875rem;
+}
+
+.cal-read b {
+  color: var(--ink);
+}
+
+.cal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-4);
+  margin-block-start: var(--s-3);
+  padding-inline: var(--s-1);
+  color: var(--ink-3);
+  font-size: 0.75rem;
+}
+
+.cal-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.trends {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.trend {
+  padding: var(--s-5);
+  border-radius: var(--r-l);
+  background: var(--surface);
+}
+
+.trend-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.trend-name {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 650;
+}
+
+.trend-now {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-weight: 600;
+}
+
+.trend-note {
+  margin-block-start: var(--s-2);
+  color: var(--ink-3);
+  font-size: 0.875rem;
+}
+
+/* График */
+.chart {
+  margin-block-start: var(--s-3);
+}
+
+.chart-read {
+  margin-block-end: var(--s-3);
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+}
+
+.chart-read b {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.chart-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--s-2);
+}
+
+.chart-y {
+  position: relative;
+  min-inline-size: 2rem;
+  block-size: 132px;
+  color: var(--ink-3);
+  font-size: 0.6875rem;
+  line-height: 1;
+}
+
+.chart-y span {
+  position: absolute;
+  inset-inline-end: 0;
+  translate: 0 -50%;
+}
+
+.chart-area {
+  position: relative;
+  block-size: 132px;
+  cursor: crosshair;
+  /* Палец ведёт по графику вбок, а страница при этом листается как обычно */
+  touch-action: pan-y;
+}
+
+.chart-grid {
+  position: absolute;
+  inset-inline: 0;
+  block-size: 1px;
+  background: var(--line);
+}
+
+.chart-svg,
+.chart-dots {
+  position: absolute;
+  inset-block: 0;
+  inset-inline: 6px;
+}
+
+.chart-svg {
+  inline-size: calc(100% - 12px);
+  block-size: 100%;
+  overflow: visible;
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--forest);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-dot {
+  position: absolute;
+  inline-size: 9px;
+  block-size: 9px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: var(--forest);
+  box-shadow: 0 0 0 2.5px var(--surface);
+}
+
+.chart-dot.is-active {
+  inline-size: 13px;
+  block-size: 13px;
+  background: var(--ochre);
+}
+
+.chart.is-dense .chart-dot:not(.is-active) {
+  inline-size: 4px;
+  block-size: 4px;
+  box-shadow: none;
+}
+
+.chart-cross {
+  position: absolute;
+  inset-block: 0;
+  inline-size: 1px;
+  translate: -50% 0;
+  background: var(--line-strong);
+}
+
+.chart-x {
+  grid-column: 2;
+  display: flex;
+  justify-content: space-between;
+  margin-block-start: var(--s-2);
+  color: var(--ink-3);
+  font-size: 0.6875rem;
+}
+
+/* Ранг: крупная буква, путь до следующего лагеря и все лагеря */
+.rank-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding: var(--s-6) var(--s-5) var(--s-5);
+  border-radius: var(--r-xl);
+  background: var(--tile-strength);
+  color: var(--tile-strength-ink);
+}
+
+.rank-hero-top {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+
+.rank-big {
+  display: grid;
+  place-items: center;
+  inline-size: 84px;
+  block-size: 84px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ochre);
+  color: var(--ochre-ink);
+  font-family: var(--font-display);
+  font-size: 2.75rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.rank-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.rank-meta {
+  margin-block-start: 4px;
+  font-size: 0.9375rem;
+  opacity: 0.86;
+}
+
+.rank-progress-head {
+  display: flex;
+  justify-content: space-between;
+  margin-block-end: var(--s-2);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.rank-bar {
+  display: block;
+  block-size: 8px;
+  border-radius: 99px;
+  background: color-mix(in srgb, currentColor 16%, transparent);
+  overflow: hidden;
+}
+
+.rank-bar span {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--ochre);
+  transform-origin: left;
+}
+
+.rank-forecast {
+  font-size: 0.875rem;
+  opacity: 0.86;
+  text-wrap: pretty;
+}
+
+.camps {
+  display: flex;
+  flex-direction: column;
+  padding-block-start: var(--s-2);
+  border-block-start: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+}
+
+.camps li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding-block: 7px;
+  font-size: 0.9375rem;
+  opacity: 0.6;
+}
+
+/* Тропа между лагерями */
+.camps li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 13px;
+  inset-block-start: calc(50% + 14px);
+  block-size: calc(100% - 28px);
+  border-inline-start: 2px dotted color-mix(in srgb, currentColor 40%, transparent);
+}
+
+.camps li.is-passed,
+.camps li.is-here {
+  opacity: 1;
+}
+
+.camp-dot {
+  display: grid;
+  place-items: center;
+  inline-size: 28px;
+  block-size: 28px;
+  flex: none;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.is-passed .camp-dot {
+  background: var(--tile-strength-ink);
+  color: var(--tile-strength);
+  box-shadow: none;
+}
+
+.is-here .camp-dot {
+  background: var(--ochre);
+  color: var(--ochre-ink);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ochre) 30%, transparent);
+}
+
+.camp-name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.camp-xp {
+  font-size: 0.8125rem;
+}
+
+.is-here .camp-xp {
+  color: var(--ochre);
+  font-weight: 650;
+}
+
+/* Ачивки: медали, у закрытых кольцо показывает прогресс */
+.badges {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-4) var(--s-2);
+  padding: var(--s-5) var(--s-3);
+  border-radius: var(--r-l);
+  background: var(--surface);
+}
+
+.badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.badge-medal {
+  --share: 0;
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: 60px;
+  block-size: 60px;
+  border-radius: 50%;
+  background: conic-gradient(var(--sage) calc(var(--share) * 360deg), var(--bg-sunk) 0);
+}
+
+.badge-medal > span {
+  display: grid;
+  place-items: center;
+  inline-size: 50px;
+  block-size: 50px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink-3);
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.badge.is-done .badge-medal,
+.toast .badge-medal {
+  background: var(--ochre);
+  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--ochre) 80%, transparent);
+}
+
+.badge.is-done .badge-medal > span,
+.toast .badge-medal > span {
+  background: var(--ochre);
+  color: var(--ochre-ink);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ochre-ink) 18%, transparent);
+}
+
+.badge-name {
+  margin-block-start: 2px;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.badge:not(.is-done) .badge-name {
+  color: var(--ink-2);
+}
+
+.badge-how {
+  color: var(--ink-3);
+  font-size: 0.6875rem;
+  line-height: 1.3;
+}
+
+.xp-sum {
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+/* Всплывашки о новом ранге и ачивках: стекло сверху экрана */
+.toasts {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-start: calc(env(safe-area-inset-top) + 12px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  inline-size: min(420px, calc(100% - 2 * var(--gutter)));
+  margin-inline: auto;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 10px 16px 10px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-l);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  backdrop-filter: blur(22px) saturate(1.5);
+  box-shadow: var(--shadow);
+  animation: toast-in 700ms var(--ease-out) both;
+}
+
+.toast:nth-child(2) { animation-delay: 120ms; }
+.toast:nth-child(3) { animation-delay: 240ms; }
+
+.toast .badge-medal {
+  inline-size: 46px;
+  block-size: 46px;
+}
+
+.toast .badge-medal > span {
+  inline-size: 46px;
+  block-size: 46px;
+  font-size: 0.9375rem;
+}
+
+.toast-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.toast-text b {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.toast-text span {
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+}
+
+.toasts.is-leaving .toast {
+  animation: toast-out 450ms var(--ease-in-out) both;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    translate: 0 -24px;
+    scale: 0.94;
+  }
+}
+
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    translate: 0 -16px;
+  }
+}
+
+/* ---------- Форма замера ---------- */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  padding: var(--s-1) var(--s-5);
+  border-radius: var(--r-l);
+  background: var(--surface);
+}
+
+.field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7.5rem;
+  align-items: center;
+  gap: var(--s-1) var(--s-3);
+  padding-block: 10px;
+  border-block-end: 1px solid var(--line);
+}
+
+.field:last-child {
+  border-block-end: 0;
+}
+
+.field-label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+}
+
+.field-hint {
+  color: var(--ink-3);
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.field-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field-date {
+  padding-inline-end: 10px;
+  font-size: 1rem;
+}
+
+.field .field-error {
+  grid-column: 1 / -1;
+}
+
+.form-actions {
+  position: sticky;
+  inset-block-end: calc(env(safe-area-inset-bottom) + var(--tabbar-h) + 24px);
+  display: flex;
+  gap: var(--s-2);
+  padding-block: var(--s-2);
+}
+
+.form-actions .btn {
+  flex: 1;
+  box-shadow: var(--shadow);
+}
+
+.form-actions .btn-ghost {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1.5px var(--line-strong), var(--shadow-soft);
+}
+
+/* ---------- Анимация появления ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .screen.is-entering > .stack > *,
+  .screen.is-entering > .form > * {
+    animation: rise 620ms var(--ease-out) both;
+  }
+
+  .screen.is-entering > .stack > :nth-child(2) { animation-delay: 40ms; }
+  .screen.is-entering > .stack > :nth-child(3) { animation-delay: 80ms; }
+  .screen.is-entering > .stack > :nth-child(4) { animation-delay: 120ms; }
+  .screen.is-entering > .stack > :nth-child(n + 5) { animation-delay: 160ms; }
+
+  .is-entering .hello span {
+    animation: rise-big 900ms var(--ease-out) both;
+  }
+
+  .is-entering .hello span + span {
+    animation-delay: 90ms;
+  }
+
+  .is-entering .today-date,
+  .is-entering .rank-chip {
+    animation: fade 700ms var(--ease-out) both;
+  }
+
+  .is-entering .mountain .layer {
+    animation: layer-in 1200ms var(--ease-out) both;
+  }
+
+  .is-entering .mountain .layer-far { animation-delay: 60ms; }
+  .is-entering .mountain .layer-mid { animation-delay: 130ms; }
+  .is-entering .mountain .layer-main { animation-delay: 200ms; }
+  .is-entering .mountain .layer-fore { animation-delay: 280ms; }
+  .is-entering .mountain .layer-water { animation-delay: 340ms; }
+
+  .is-entering .altitude {
+    animation: glass-in 900ms 500ms var(--ease-out) both;
+  }
+
+  .is-entering .streak-row,
+  .is-entering .tile,
+  .is-entering .today-note {
+    animation: rise 700ms var(--ease-out) both;
+  }
+
+  .is-entering .streak-row { animation-delay: 380ms; }
+  .is-entering .tile:nth-child(1) { animation-delay: 440ms; }
+  .is-entering .tile:nth-child(2) { animation-delay: 500ms; }
+  .is-entering .tile:nth-child(3) { animation-delay: 560ms; }
+  .is-entering .today-note { animation-delay: 620ms; }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 18px;
+  }
+}
+
+@keyframes rise-big {
+  from {
+    opacity: 0;
+    translate: 0 0.45em;
+    filter: blur(6px);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes layer-in {
+  from {
+    transform: translateY(40px);
+  }
+}
+
+@keyframes glass-in {
+  from {
+    opacity: 0;
+    translate: 0 -8px;
+    -webkit-backdrop-filter: blur(0);
+    backdrop-filter: blur(0);
+  }
+}
+
+/* Переход между экранами (Safari 18+, Chrome): старый уходит, новый всплывает */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: vt-out 240ms var(--ease-in-out) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: vt-in 520ms var(--ease-out) both;
+  }
+
+  ::view-transition-group(tabbar) {
+    animation: none;
+  }
+}
+
+.tabbar {
+  view-transition-name: tabbar;
+}
+
+@keyframes vt-out {
+  to {
+    opacity: 0;
+    scale: 0.985;
+  }
+}
+
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    translate: 0 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* Охра на шалфее читается плохо: на итоге растяжки цифра опыта тёмная */
+.run-done .done-xp {
+  color: var(--tile-stretch-ink);
+}
+
+/* Итог растяжки занимает весь экран, без полосы фона снизу */
+.run-done {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  min-block-size: 0;
+  margin: 0;
+  padding: var(--s-7) max(var(--gutter), env(safe-area-inset-left)) calc(var(--s-7) + env(safe-area-inset-bottom));
+  overflow-y: auto;
+}
+
+.run-done > * {
+  inline-size: 100%;
+  max-inline-size: 520px;
+  margin-inline: auto;
+}
+
+/* На экране плеера нижней панели нет, место под неё не нужно */
+.main:has(> .screen-run:not([hidden])) {
+  padding-block-end: 0;
+}
+
+/* ---------- Зал: место, тропа блоков, рисунки, −/+, замена, отдых ---------- */
+
+/* Бумага, на которой нарисованы упражнения. Светлая в обеих темах: так рисунок читается лучше всего */
+:root {
+  --paper: #f6f1e7;
+  --paper-line: rgba(46, 74, 59, 0.14);
+}
+
+.place-seg {
+  margin-block-end: var(--s-1);
+}
+
+/* Тропа блоков: три лагеря на одной линии, под каждым 12 делений */
+.path {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding: var(--s-5) var(--s-4) var(--s-4);
+  border-radius: var(--r-l);
+  background: var(--surface);
+}
+
+.path-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-inline: var(--s-1);
+}
+
+.path-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.path-lap {
+  color: var(--ink-3);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.path-blocks {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-3);
+}
+
+/* Сама тропа: пунктир от первого лагеря до последнего, на высоте значков */
+.path-blocks::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 15px;
+  inset-inline: calc(100% / 6) calc(100% / 6);
+  border-block-start: 2px dashed var(--line-strong);
+}
+
+.path-block {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.path-camp {
+  display: grid;
+  place-items: center;
+  inline-size: 36px;
+  block-size: 32px;
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.path-camp svg {
+  inline-size: 26px;
+  block-size: 22px;
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.path-block.is-done .path-camp svg {
+  fill: var(--forest);
+  stroke: var(--forest);
+}
+
+.path-block.is-now .path-camp svg {
+  fill: var(--ochre);
+  stroke: var(--ochre);
+}
+
+.path-name {
+  font-weight: 650;
+  font-size: 0.9375rem;
+  line-height: 1.2;
+}
+
+.path-block:not(.is-now):not(.is-done) .path-name {
+  color: var(--ink-3);
+}
+
+.path-count {
+  color: var(--ink-3);
+  font-size: 0.75rem;
+}
+
+.path-ticks {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 3px;
+  inline-size: min(100%, 84px);
+  margin-block-start: 2px;
+}
+
+.path-ticks i {
+  block-size: 5px;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.path-ticks i.on {
+  background: var(--forest);
+}
+
+.path-ticks i.next {
+  background: var(--ochre);
+}
+
+.path-idea {
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-m);
+  background: var(--bg-sunk);
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.path-idea b {
+  color: var(--ink);
+}
+
+/* Рисунок упражнения: два кадра, второй проявляется и уходит */
+.frames {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--r-m);
+  background: #fff;
+  overflow: hidden;
+}
+
+.frames.is-art {
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--paper-line);
+}
+
+.frames img {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+}
+
+.frames.is-art img {
+  padding: var(--s-4);
+}
+
+.frames-b {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .frames-b {
+    animation: frame-swap 3.6s var(--ease-in-out) infinite;
+  }
+}
+
+@keyframes frame-swap {
+  0%, 38% { opacity: 0; }
+  50%, 88% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.set-art {
+  display: block;
+  margin: 0 0 var(--s-1);
+  border-radius: var(--r-m);
+  text-decoration: none;
+}
+
+.set-art .frames {
+  aspect-ratio: 16 / 10;
+}
+
+.ex-thumb.is-art {
+  padding: 4px;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--paper-line);
+  object-fit: contain;
+}
+
+.photos.is-art .photo {
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--paper-line);
+}
+
+.photos.is-art .photo img {
+  max-block-size: 300px;
+  padding: var(--s-5);
+}
+
+.credit {
+  color: var(--ink-3);
+  font-size: 0.75rem;
+}
+
+/* Текущий подход: поля с кнопками −/+ одно под другим, галочка справа во всю высоту */
+.set.is-current {
+  grid-template-columns: 28px minmax(0, 1fr) 56px;
+  align-items: stretch;
+}
+
+.set.is-current .set-no {
+  align-self: center;
+}
+
+.steppers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-inline-size: 0;
+}
+
+.stepper {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 52px;
+  gap: 6px;
+}
+
+.stepper .field-input {
+  padding: 0 38px 0 12px;
+  text-align: center;
+  font-size: 1.25rem;
+}
+
+.step {
+  display: grid;
+  place-items: center;
+  min-block-size: 52px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--bg-sunk);
+  color: var(--ink);
+  transition: background-color 180ms var(--ease-out), scale 220ms var(--ease-out);
+}
+
+.step:active {
+  scale: 0.92;
+  background: var(--line-strong);
+}
+
+.step .icon {
+  inline-size: 20px;
+  block-size: 20px;
+  stroke-width: 2.4;
+}
+
+.set.is-current .set-done {
+  inline-size: 56px;
+  block-size: auto;
+  min-block-size: 52px;
+}
+
+/* Замена упражнения */
+.swap-toggle {
+  align-self: flex-start;
+  min-block-size: 40px;
+  margin-inline: var(--s-3);
+  padding-inline: var(--s-4);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--line-strong);
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background-color 180ms var(--ease-out);
+}
+
+.swap-toggle:active,
+.swap-toggle[aria-expanded='true'] {
+  background: var(--bg-sunk);
+}
+
+.set-swapped {
+  padding-inline: var(--s-3);
+  color: var(--accent);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.swap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin-inline: var(--s-1);
+  padding: var(--s-3) var(--s-1) var(--s-1);
+  border-radius: var(--r-m);
+  background: var(--bg-sunk);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .swap {
+    animation: swap-in 320ms var(--ease-out);
+  }
+}
+
+@keyframes swap-in {
+  from { opacity: 0; translate: 0 -6px; }
+}
+
+.swap-title {
+  padding-inline: var(--s-3);
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.swap-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.swap-pick {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  inline-size: 100%;
+  padding: 8px var(--s-3) 8px 8px;
+  border: 0;
+  border-radius: var(--r-s);
+  background: transparent;
+  color: inherit;
+  text-align: start;
+  transition: background-color 180ms var(--ease-out);
+}
+
+.swap-pick:active {
+  background: var(--surface);
+}
+
+/* Отдых: время, −15 / +15, «Пропустить» */
+.rest {
+  padding-inline-start: 18px;
+}
+
+.rest-main {
+  min-inline-size: 64px;
+}
+
+.rest-adjust {
+  display: flex;
+  gap: 2px;
+  margin-inline-start: auto;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--bg-sunk);
+}
+
+.rest-step {
+  min-inline-size: 48px;
+  min-block-size: 42px;
+  padding-inline: 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 180ms var(--ease-out), opacity 180ms var(--ease-out);
+}
+
+.rest-step:active {
+  background: var(--surface);
+}
+
+.rest-step:disabled {
+  opacity: 0.35;
+}
+
+@media (max-width: 379px) {
+  .rest {
+    gap: 6px;
+    padding-inline: 14px 8px;
+  }
+
+  .rest-main {
+    min-inline-size: 0;
+  }
+
+  .rest-time {
+    font-size: 1.5rem;
+  }
+
+  .rest-step {
+    min-inline-size: 38px;
+    padding-inline: 4px;
+    font-size: 0.8125rem;
+  }
+
+  .rest-btn {
+    padding-inline: 10px;
+    font-size: 0.8125rem;
+  }
+
+  .stepper {
+    grid-template-columns: 46px minmax(0, 1fr) 46px;
+  }
+}
+
+/* Кор: ссылка на папку курса, вводится один раз на устройстве */
+.core-link {
+  padding: var(--s-5) var(--s-4) var(--s-4);
+  border-radius: var(--r-l);
+  background: var(--surface);
+}
+
+.core-link-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.core-link-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.core-link-text {
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.core-link-input {
+  padding-inline: 14px;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.video-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-2);
+}

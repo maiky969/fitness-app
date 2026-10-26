@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Сегодня · Fitness App</title>
+    <meta name="description" content="Личный трекер тренировок: силовые, кор, растяжка и путь от ранга E до S" />
+    <!-- Яндекс Диск не отдаёт видео, если видит, с какого сайта пришёл запрос -->
+    <meta name="referrer" content="no-referrer" />
+    <meta name="theme-color" content="#efe8db" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121815" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Fitness App" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="icons/icon-180.png" />
+    <link rel="preload" href="fonts/geologica-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/onest-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="fonts.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      // Тема ставится до отрисовки, чтобы экран не мигал светлым ночью
+      (function () {
+        try {
+          var saved = JSON.parse(localStorage.getItem('fitness-app:v1') || '{}');
+          if (saved.theme === 'light' || saved.theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', saved.theme);
+          }
+        } catch (error) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- Иконки: один набор, линия 1.75, скруглённые концы -->
+    <svg class="sprite" aria-hidden="true" focusable="false">
+      <symbol id="i-today" viewBox="0 0 24 24">
+        <path d="M3 19.5h18" />
+        <path d="m3.5 17 5.5-8 3.5 4.5 2.5-3 5.5 6.5" />
+        <circle cx="17" cy="5.5" r="1.75" />
+      </symbol>
+      <symbol id="i-progress" viewBox="0 0 24 24">
+        <path d="M4 20V13M10 20V8M16 20v-5M21 20H3" />
+        <path d="m4 9 6-5 6 6 4-3" />
+      </symbol>
+      <symbol id="i-profile" viewBox="0 0 24 24">
+        <circle cx="12" cy="8.5" r="3.75" />
+        <path d="M4.5 20c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5" />
+      </symbol>
+      <symbol id="i-back" viewBox="0 0 24 24">
+        <path d="M14.5 5.5 8 12l6.5 6.5" />
+      </symbol>
+      <symbol id="i-next" viewBox="0 0 24 24">
+        <path d="m9.5 5.5 6.5 6.5-6.5 6.5" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <path d="m5 12.5 4.5 4.5L19 7.5" />
+      </symbol>
+      <symbol id="i-play" viewBox="0 0 24 24">
+        <path d="M8 5.5v13l10.5-6.5z" />
+      </symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24">
+        <path d="M8.5 5.5v13M15.5 5.5v13" />
+      </symbol>
+      <symbol id="i-flame" viewBox="0 0 24 24">
+        <path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.7 3-5.6 3.6-9.3 2.5 1.4 3.6 3.6 3.6 5.6 1-.6 1.7-1.7 1.9-3 2.2 1.9 3.9 4.2 3.9 6.9 0 3.5-2.6 6-6.5 6z" />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="M6 6l12 12M18 6 6 18" />
+      </symbol>
+      <symbol id="i-prev" viewBox="0 0 24 24">
+        <path d="M17.5 6v12L9 12zM6.5 6v12" />
+      </symbol>
+      <symbol id="i-skip" viewBox="0 0 24 24">
+        <path d="M6.5 6v12L15 12zM17.5 6v12" />
+      </symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14" />
+      </symbol>
+      <symbol id="i-minus" viewBox="0 0 24 24">
+        <path d="M5 12h14" />
+      </symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M12 7.5v5.5M12 16.2v.3" />
+      </symbol>
+    </svg>
+
+    <div class="app">
+      <header class="topbar" id="topbar" hidden>
+        <button class="topbar-back" type="button" data-back aria-label="Назад">
+          <svg class="icon" aria-hidden="true"><use href="#i-back" /></svg>
+        </button>
+        <h1 class="topbar-title" id="screen-title" tabindex="-1">Сегодня</h1>
+      </header>
+
+      <main class="main" id="main">
+        <!-- СЕГОДНЯ -->
+        <section class="screen screen-today" data-screen="today" aria-labelledby="today-hello" hidden>
+          <div id="today-body"></div>
+        </section>
+
+        <!-- СИЛОВЫЕ -->
+        <section class="screen" data-screen="strength" aria-labelledby="screen-title" hidden>
+          <div class="stack" id="plan-body"></div>
+        </section>
+
+        <!-- КОР -->
+        <section class="screen" data-screen="core" aria-labelledby="screen-title" hidden>
+          <div class="stack" id="core-body"></div>
+        </section>
+
+        <!-- РАСТЯЖКА -->
+        <section class="screen" data-screen="stretch" aria-labelledby="screen-title" hidden>
+          <div class="stack" id="stretch-body"></div>
+        </section>
+
+        <!-- РАСТЯЖКА ИДЁТ: картинка, таймер, переходы -->
+        <section class="screen screen-run" data-screen="stretch-run" aria-labelledby="run-title" hidden>
+          <div id="run-body"></div>
+          <p class="sr-only" role="status" id="run-status"></p>
+        </section>
+
+        <!-- ТРЕНИРОВКА, УПРАЖНЕНИЕ, ЗАПИСЬ, РОСТ ВЕСА -->
+        <section class="screen" data-screen="detail" aria-labelledby="screen-title" hidden>
+          <div class="stack" id="detail-body"></div>
+        </section>
+
+        <!-- ЗАПИСЬ ТРЕНИРОВКИ: подходы и таймер отдыха -->
+        <section class="screen" data-screen="session" aria-labelledby="screen-title" hidden>
+          <div class="stack" id="session-body"></div>
+
+          <div class="rest" id="rest-bar" hidden>
+            <span class="rest-line" aria-hidden="true"><span id="rest-fill"></span></span>
+            <div class="rest-main" role="timer" aria-labelledby="rest-label">
+              <span class="rest-label" id="rest-label">Отдых</span>
+              <span class="rest-time num" id="rest-time">0:00</span>
+            </div>
+            <div class="rest-adjust" role="group" aria-label="Время отдыха">
+              <button class="rest-step" type="button" id="rest-less" aria-label="Отдых на 15 секунд меньше">−15</button>
+              <button class="rest-step" type="button" id="rest-more" aria-label="Отдых на 15 секунд больше">+15</button>
+            </div>
+            <button class="btn btn-ghost rest-btn" type="button" id="rest-skip">Пропустить</button>
+          </div>
+          <p class="sr-only" role="status" id="rest-status"></p>
+        </section>
+
+        <!-- ПРОГРЕСС -->
+        <section class="screen" data-screen="progress" aria-labelledby="screen-title" hidden>
+          <div class="stack" id="progress-body"></div>
+        </section>
+
+        <!-- ПРОФИЛЬ -->
+        <section class="screen" data-screen="profile" aria-labelledby="screen-title" hidden>
+          <div class="stack" id="profile-body"></div>
+        </section>
+
+        <!-- ЗАМЕР: анкета, новый замер, правка замера -->
+        <section class="screen" data-screen="measure" aria-labelledby="screen-title" hidden>
+          <form class="form" id="measure-form" novalidate></form>
+        </section>
+      </main>
+
+      <div class="toasts" id="toasts" role="status" aria-live="polite" hidden></div>
+
+      <nav class="tabbar" id="tabbar" aria-label="Разделы">
+        <a class="tabbar-item" href="#today" data-nav="today">
+          <svg class="icon" aria-hidden="true"><use href="#i-today" /></svg>
+          <span>Сегодня</span>
+        </a>
+        <a class="tabbar-item" href="#progress" data-nav="progress">
+          <svg class="icon" aria-hidden="true"><use href="#i-progress" /></svg>
+          <span>Прогресс</span>
+        </a>
+        <a class="tabbar-item" href="#profile" data-nav="profile">
+          <svg class="icon" aria-hidden="true"><use href="#i-profile" /></svg>
+          <span>Профиль</span>
+        </a>
+      </nav>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
