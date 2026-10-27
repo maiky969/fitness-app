@@ -2,7 +2,7 @@
 // Стратегия — «сначала сеть, потом кеш»: пока сеть есть, код всегда свежий;
 // когда сети нет, всё отдаётся из кеша.
 
-const CACHE = 'fitness-app-v8';
+const CACHE = 'fitness-app-v9';
 
 // Оболочка приложения. Шрифты перечислены поимённо: без них интерфейс
 // откатится на системный шрифт, а это заметно.
@@ -114,11 +114,69 @@ const ART = [
   './exercises/V-Bar_Pulldown/1.svg'
 ];
 
+// Фото разминки и заминки после силовой: тоже нужны в зале без сети
+const GYM_PHOTOS = [
+  './exercises/Arm_Circles/0.jpg',
+  './exercises/Arm_Circles/1.jpg',
+  './exercises/Standing_Hip_Circles/0.jpg',
+  './exercises/Standing_Hip_Circles/1.jpg',
+  './exercises/Bodyweight_Squat/0.jpg',
+  './exercises/Bodyweight_Squat/1.jpg',
+  './exercises/Bodyweight_Walking_Lunge/0.jpg',
+  './exercises/Bodyweight_Walking_Lunge/1.jpg',
+  './exercises/Inchworm/0.jpg',
+  './exercises/Inchworm/1.jpg',
+  './exercises/Worlds_Greatest_Stretch/0.jpg',
+  './exercises/Worlds_Greatest_Stretch/1.jpg',
+  './exercises/Chest_And_Front_Of_Shoulder_Stretch/0.jpg',
+  './exercises/Chest_And_Front_Of_Shoulder_Stretch/1.jpg',
+  './exercises/Standing_Biceps_Stretch/0.jpg',
+  './exercises/Standing_Biceps_Stretch/1.jpg',
+  './exercises/One_Arm_Against_Wall/0.jpg',
+  './exercises/One_Arm_Against_Wall/1.jpg',
+  './exercises/Elbows_Back/0.jpg',
+  './exercises/Elbows_Back/1.jpg',
+  './exercises/Shoulder_Stretch/0.jpg',
+  './exercises/Shoulder_Stretch/1.jpg',
+  './exercises/Upward_Stretch/0.jpg',
+  './exercises/Upward_Stretch/1.jpg',
+  './exercises/Standing_Lateral_Stretch/0.jpg',
+  './exercises/Standing_Lateral_Stretch/1.jpg',
+  './exercises/Childs_Pose/0.jpg',
+  './exercises/Childs_Pose/1.jpg',
+  './exercises/Cat_Stretch/0.jpg',
+  './exercises/Cat_Stretch/1.jpg',
+  './exercises/Triceps_Stretch/0.jpg',
+  './exercises/Triceps_Stretch/1.jpg',
+  './exercises/Middle_Back_Stretch/0.jpg',
+  './exercises/Middle_Back_Stretch/1.jpg',
+  './exercises/Side-Lying_Floor_Stretch/0.jpg',
+  './exercises/Side-Lying_Floor_Stretch/1.jpg',
+  './exercises/Upper_Back_Stretch/0.jpg',
+  './exercises/Upper_Back_Stretch/1.jpg',
+  './exercises/Knee_Across_The_Body/0.jpg',
+  './exercises/Knee_Across_The_Body/1.jpg',
+  './exercises/On_Your_Side_Quad_Stretch/0.jpg',
+  './exercises/On_Your_Side_Quad_Stretch/1.jpg',
+  './exercises/Seated_Floor_Hamstring_Stretch/0.jpg',
+  './exercises/Seated_Floor_Hamstring_Stretch/1.jpg',
+  './exercises/Kneeling_Hip_Flexor/0.jpg',
+  './exercises/Kneeling_Hip_Flexor/1.jpg',
+  './exercises/Ankle_On_The_Knee/0.jpg',
+  './exercises/Ankle_On_The_Knee/1.jpg',
+  './exercises/Calf_Stretch_Hands_Against_Wall/0.jpg',
+  './exercises/Calf_Stretch_Hands_Against_Wall/1.jpg',
+  './exercises/Runners_Stretch/0.jpg',
+  './exercises/Runners_Stretch/1.jpg',
+  './exercises/The_Straddle/0.jpg',
+  './exercises/The_Straddle/1.jpg'
+];
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE)
       // Одна недоступная мелочь не должна ронять всю установку
-      .then((cache) => Promise.allSettled(SHELL.concat(ART).map((url) => cache.add(url))))
+      .then((cache) => Promise.allSettled(SHELL.concat(ART, GYM_PHOTOS).map((url) => cache.add(url))))
       .then(() => self.skipWaiting())
   );
 });

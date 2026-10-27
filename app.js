@@ -518,6 +518,7 @@
 
     var routines = {};
     state.stretch.forEach(function (item) {
+      if (String(item.routine).indexOf('cool-') === 0) return; // заминки не комплексы
       routines[item.routine] = true;
     });
 
@@ -1118,9 +1119,38 @@
   var STRETCH = DATA.stretch || { routines: [] };
 
   function stretchRoutine(id) {
+    if (typeof id === 'string' && id.indexOf('cool-') === 0) return cooldownRoutine(id.slice(5));
     return STRETCH.routines.filter(function (routine) {
       return routine.id === id;
     })[0] || null;
+  }
+
+  // ---------- Заминка после силовой ----------
+  // Набор растяжек под мышцы дня. Каждый раз 5 упражнений со сдвигом по кругу:
+  // сдвиг зависит от того, сколько раз эту заминку уже делали.
+
+  function cooldownDay(place, workoutId) {
+    var workout = findWorkout(place, workoutId);
+    var day = workout && workout.day;
+    var days = (STRETCH.cooldown && STRETCH.cooldown.days) || {};
+    return day && days[day] ? day : 'full';
+  }
+
+  function cooldownRoutine(day) {
+    var cool = STRETCH.cooldown;
+    var info = cool && cool.days[day];
+    if (!info) return null;
+    var id = 'cool-' + day;
+    var times = state.stretch.filter(function (record) {
+      return record.routine === id;
+    }).length;
+    var size = Math.min(cool.size || 5, info.items.length);
+    var start = (times * size) % info.items.length;
+    var items = [];
+    for (var index = 0; index < size; index += 1) {
+      items.push(info.items[(start + index) % info.items.length]);
+    }
+    return { id: id, title: 'Заминка: ' + info.title.toLowerCase(), about: info.about, cooldown: true, items: items };
   }
 
   // Длительность комплекса в минутах, с переходами между упражнениями
@@ -2049,9 +2079,23 @@
       return {
         screen: 'stretch',
         nav: 'today',
-        title: picked ? 'Растяжка: ' + picked.title.toLowerCase() : SECTIONS.stretch,
+        title: picked ? (picked.cooldown ? picked.title : 'Растяжка: ' + picked.title.toLowerCase()) : SECTIONS.stretch,
         parent: picked ? '#stretch' : '#today',
         render: renderStretch
+      };
+    }
+
+    // Разминка перед силовой: тот же плеер, что у растяжки, возврат в тренировку
+    if (id === 'warmup') {
+      if (!state.session || !STRETCH.warmup) return strength;
+      return {
+        screen: 'stretch-run',
+        nav: 'today',
+        title: 'Разминка',
+        parent: '#session',
+        focus: true,
+        bare: true,
+        run: STRETCH.warmup
       };
     }
 
@@ -2061,7 +2105,7 @@
       return {
         screen: 'stretch-run',
         nav: 'today',
-        title: 'Растяжка: ' + routine.title.toLowerCase(),
+        title: routine.cooldown ? routine.title : 'Растяжка: ' + routine.title.toLowerCase(),
         parent: '#stretch/' + routine.id,
         focus: true,
         bare: true,
@@ -2217,9 +2261,9 @@
     return typeof mine === 'number' ? mine : entry.rest;
   }
 
-  // Примерная длительность: разминка плюс подходы с отдыхом
+  // Примерная длительность: дорожка 5 мин и разминка ~4,5 мин плюс подходы с отдыхом
   function workoutMinutes(workout) {
-    var seconds = 5 * 60;
+    var seconds = 5 * 60 + 270;
     workout.items.forEach(function (entry) {
       seconds += entry.sets * (50 + entry.rest);
     });
@@ -3107,6 +3151,8 @@
     return sets;
   }
 
+  var TREAD_MINUTES = 5;
+
   function startSession(place, workout) {
     if (!workout || state.session) return;
     unlockAudio();
@@ -3115,6 +3161,9 @@
       workoutId: workout.id,
       startedAt: Date.now(),
       rest: null,
+      // Перед подходами: 'tread' — дорожка, 'moves' — разминка, null — упражнения
+      warm: 'tread',
+      treadEndsAt: Date.now() + TREAD_MINUTES * 60000,
       items: workout.items.map(function (entry) {
         return { ex: entry.ex, sets: freshSets(entry.ex, entry.sets) };
       })
@@ -3180,18 +3229,57 @@
     );
   }
 
-  // Поле с кнопками по бокам. Цифру можно и вписать руками.
+  // Поле с кнопками сверху и снизу: колонка той же ширины, что у остальных подходов,
+  // поэтому кг и повторы стоят ровно друг под другом. Цифру можно и вписать руками.
   function stepper(set, key, label, mode, unit, what) {
     return (
       '<div class="stepper" data-key="' + key + '">' +
-      '<button class="step" type="button" data-step="-1" aria-label="Меньше: ' + what + '">' +
-      '<svg class="icon" aria-hidden="true"><use href="#i-minus" /></svg></button>' +
-      '<span class="set-field">' + setInput(set, key, label, mode) +
-      '<span class="field-unit" aria-hidden="true">' + unit + '</span></span>' +
       '<button class="step" type="button" data-step="1" aria-label="Больше: ' + what + '">' +
       '<svg class="icon" aria-hidden="true"><use href="#i-plus" /></svg></button>' +
+      '<span class="set-field">' + setInput(set, key, label, mode) +
+      '<span class="field-unit" aria-hidden="true">' + unit + '</span></span>' +
+      '<button class="step" type="button" data-step="-1" aria-label="Меньше: ' + what + '">' +
+      '<svg class="icon" aria-hidden="true"><use href="#i-minus" /></svg></button>' +
       '</div>'
     );
+  }
+
+  // Кнопки «+ Подход» / «− Подход» под подходами упражнения.
+  // Убрать можно только последний несделанный подход, и хотя бы один должен остаться.
+  var SETS_MAX = 8;
+
+  function setControls(exIndex, sets) {
+    var last = sets[sets.length - 1];
+    var canRemove = sets.length > 1 && !last.done;
+    var canAdd = sets.length < SETS_MAX;
+    return (
+      '<div class="set-count">' +
+      '<button class="set-count-btn" type="button" data-set-add="' + exIndex + '"' + (canAdd ? '' : ' disabled') + '>' +
+      '<svg class="icon" aria-hidden="true"><use href="#i-plus" /></svg>Подход</button>' +
+      '<button class="set-count-btn" type="button" data-set-remove="' + exIndex + '"' + (canRemove ? '' : ' disabled') + '>' +
+      '<svg class="icon" aria-hidden="true"><use href="#i-minus" /></svg>Подход</button>' +
+      '</div>'
+    );
+  }
+
+  function addSet(exIndex) {
+    var sets = state.session.items[exIndex].sets;
+    if (sets.length >= SETS_MAX) return;
+    var last = sets[sets.length - 1];
+    sets.push({ w: last ? last.w : '', r: last ? last.r : '', done: false });
+    saveState();
+    renderSession({ ex: exIndex, add: true });
+  }
+
+  function removeSet(exIndex) {
+    var sets = state.session.items[exIndex].sets;
+    if (sets.length <= 1 || sets[sets.length - 1].done) return;
+    sets.pop();
+    // Убрали последний несделанный подход, а всё остальное сделано: отдых больше не нужен
+    var counts = sessionCounts();
+    if (counts.done === counts.total) stopRest();
+    saveState();
+    renderSession({ ex: exIndex, remove: true });
   }
 
   function swapPanel(exIndex, entry) {
@@ -3217,6 +3305,97 @@
         .join('') +
       '</ul></div>'
     );
+  }
+
+  // ---------- Дорожка и разминка перед подходами ----------
+
+  var treadTimer = null;
+
+  function clock(seconds) {
+    var m = Math.floor(seconds / 60);
+    var sec = seconds % 60;
+    return m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+
+  function warmupMinutes() {
+    return STRETCH.warmup ? stretchMinutes(STRETCH.warmup) : 0;
+  }
+
+  function warmCard(session) {
+    if (session.warm === 'tread') {
+      var left = Math.max(0, Math.ceil((session.treadEndsAt - Date.now()) / 1000));
+      return (
+        '<section class="warm" aria-labelledby="warm-title">' +
+        '<ol class="warm-steps" aria-label="Шаг 1 из 3: дорожка">' +
+        '<li class="is-now">Дорожка</li><li>Разминка</li><li>Упражнения</li></ol>' +
+        '<div class="warm-main">' +
+        '<div><h2 class="warm-title" id="warm-title">Дорожка</h2>' +
+        '<p class="warm-text">Быстрый шаг или лёгкий бег. Разогрейся до лёгкого пота.</p></div>' +
+        '<p class="warm-clock num' + (left ? '' : ' is-over') + '" id="tread-time" role="timer" aria-live="off">' +
+        (left ? clock(left) : 'Время') + '</p>' +
+        '</div>' +
+        '<button class="btn btn-light btn-block" type="button" data-warm="tread-done">Готово, к разминке</button>' +
+        '<button class="warm-skip" type="button" data-warm="skip">Пропустить разминку</button>' +
+        '</section>'
+      );
+    }
+    if (session.warm === 'moves') {
+      return (
+        '<section class="warm" aria-labelledby="warm-title">' +
+        '<ol class="warm-steps" aria-label="Шаг 2 из 3: разминка">' +
+        '<li class="is-done">Дорожка</li><li class="is-now">Разминка</li><li>Упражнения</li></ol>' +
+        '<div class="warm-main">' +
+        '<div><h2 class="warm-title" id="warm-title">Разминка</h2>' +
+        '<p class="warm-text">' + STRETCH.warmup.items.length + ' движений, около ' + formatNum(warmupMinutes()) +
+        ' мин. Таймер сам переключает.</p></div>' +
+        '</div>' +
+        '<a class="btn btn-light btn-block" href="#warmup">Начать разминку</a>' +
+        '<button class="warm-skip" type="button" data-warm="skip">Пропустить разминку</button>' +
+        '</section>'
+      );
+    }
+    return '';
+  }
+
+  // Часы дорожки: раз в секунду, по часам устройства. В ноль — сигнал один раз.
+  function runTread() {
+    clearInterval(treadTimer);
+    treadTimer = null;
+    var session = state.session;
+    if (!session || session.warm !== 'tread') return;
+    treadTimer = setInterval(function () {
+      var box = document.getElementById('tread-time');
+      if (!state.session || state.session.warm !== 'tread' || !box) {
+        clearInterval(treadTimer);
+        treadTimer = null;
+        return;
+      }
+      var left = Math.max(0, Math.ceil((state.session.treadEndsAt - Date.now()) / 1000));
+      box.textContent = left ? clock(left) : 'Время';
+      box.classList.toggle('is-over', !left);
+      if (!left && !state.session.treadBeeped) {
+        state.session.treadBeeped = true;
+        saveState();
+        beep();
+      }
+    }, 1000);
+  }
+
+  function warmStep(what) {
+    var session = state.session;
+    if (!session) return;
+    unlockAudio();
+    if (what === 'tread-done') {
+      session.warm = 'moves';
+      saveState();
+      location.hash = '#warmup';
+      return;
+    }
+    if (what === 'skip') {
+      session.warm = null;
+      saveState();
+      renderSession('current');
+    }
   }
 
   // focus: куда поставить фокус после перерисовки ('current' или { ex, set, key })
@@ -3252,13 +3431,11 @@
             var fields;
             if (current) {
               fields =
-                '<div class="steppers">' +
                 (body
-                  ? ''
+                  ? '<span class="set-none">свой вес</span>'
                   : stepper(set, 'w', 'Вес в килограммах, подход ' + number, 'decimal', 'кг', 'вес')) +
                 stepper(set, 'r', (timed ? 'Секунды' : 'Повторы') + ', подход ' + number, 'numeric', timed ? 'с' : 'раз',
-                  timed ? 'секунды' : 'повторы') +
-                '</div>';
+                  timed ? 'секунды' : 'повторы');
             } else {
               fields =
                 (body
@@ -3302,7 +3479,7 @@
             ? '<p class="set-prev num">Прошлый раз: ' + setsSummary(previous, timed) + '</p>'
             : '') +
           (hint ? '<p class="set-hint num' + (hint.up ? ' is-up' : '') + '">' + escapeHtml(hint.text) + '</p>' : '') +
-          '<ol class="sets">' + rows + '</ol></section>'
+          '<ol class="sets">' + rows + '</ol>' + setControls(exIndex, sets) + '</section>'
         );
       })
       .join('');
@@ -3324,9 +3501,10 @@
       counts.total + '" aria-valuenow="' + counts.done + '"><span style="transform: scaleX(' +
       (counts.done / counts.total) + ')"></span></span>' +
       '</section>' +
+      warmCard(session) +
       (counts.done
         ? ''
-        : '<details class="fold folds" open><summary>Перед стартом<svg class="icon" aria-hidden="true"><use href="#i-next" /></svg></summary>' +
+        : '<details class="fold folds"' + (session.warm ? '' : ' open') + '><summary>Перед стартом<svg class="icon" aria-hidden="true"><use href="#i-next" /></svg></summary>' +
           '<div class="fold-body"><p><b>' + escapeHtml(workout.gear) + '.</b> ' + escapeHtml(workout.setup) + '</p>' +
           '<p>Разминка: ' + escapeHtml(program.warmup) + '</p></div></details>') +
       groups +
@@ -3334,6 +3512,7 @@
       '<p class="note">' + escapeHtml(program.cooldown) + '</p>' +
       end;
 
+    runTread();
     var endButton = document.getElementById('session-end');
     if (counts.done === counts.total) {
       endButton.addEventListener('click', finishSession);
@@ -3346,6 +3525,10 @@
     var target = null;
     if (focus === 'current') {
       target = sessionBody.querySelector('.set.is-current .set-done') || endButton;
+    } else if (focus && typeof focus === 'object' && (focus.add || focus.remove)) {
+      target = sessionBody.querySelector(
+        '[data-set-' + (focus.add ? 'add' : 'remove') + '="' + focus.ex + '"]:not([disabled])'
+      ) || sessionBody.querySelector('[data-set-add="' + focus.ex + '"]');
     } else if (focus && typeof focus === 'object' && focus.swap !== undefined) {
       target = sessionBody.querySelector('[data-swap-open="' + focus.swap + '"]');
     } else if (focus && typeof focus === 'object') {
@@ -3488,6 +3671,21 @@
       stepValue(step);
       return;
     }
+    var warm = event.target.closest('[data-warm]');
+    if (warm) {
+      warmStep(warm.dataset.warm);
+      return;
+    }
+    var add = event.target.closest('[data-set-add]');
+    if (add) {
+      addSet(Number(add.dataset.setAdd));
+      return;
+    }
+    var remove = event.target.closest('[data-set-remove]');
+    if (remove) {
+      removeSet(Number(remove.dataset.setRemove));
+      return;
+    }
     var toggle = event.target.closest('[data-swap-open]');
     if (toggle) {
       var index = Number(toggle.dataset.swapOpen);
@@ -3530,8 +3728,12 @@
     if (!session) return;
     var workout = findWorkout(session.place, session.workoutId);
     var counts = sessionCounts();
+    var planned = workout.items.reduce(function (sum, entry) {
+      return sum + entry.sets;
+    }, 0);
     var home = '#workout/' + session.place + '/' + session.workoutId;
     clearInterval(restTimer);
+    letSleep();
 
     // Ни одного подхода: записывать нечего
     if (!counts.done) {
@@ -3550,8 +3752,9 @@
       workoutId: session.workoutId,
       startedAt: session.startedAt,
       finishedAt: Date.now(),
-      complete: counts.done === counts.total,
-      total: counts.total,
+      // Целиком: всё отмечено и подходов не меньше, чем в программе
+      complete: counts.done === counts.total && counts.done >= planned,
+      total: Math.max(counts.total, planned),
       items: workout.items.map(function (entry, index) {
         // Если упражнение заменили, в историю идёт то, что реально делал
         var ex = session.items[index].ex || entry.ex;
@@ -3680,6 +3883,8 @@
   // поэтому звук «открывается» при первой отметке подхода.
   var audio = null;
 
+  // Вызывается на каждое касание во время тренировки: звук и «не гасить экран»
+  // айфон разрешает включать только в ответ на касание
   function unlockAudio() {
     try {
       var Context = window.AudioContext || window.webkitAudioContext;
@@ -3688,12 +3893,46 @@
     } catch (error) {
       audio = null;
     }
+    if (state.session) keepAwake();
+  }
+
+  // ---------- Экран не гаснет во время тренировки ----------
+  // keepAwake / letSleep живут в разделе растяжки (Screen Wake Lock, на айфоне
+  // с иконки рабочего стола работает с iOS 18.4). Айфон сам снимает блокировку,
+  // когда приложение свернули, поэтому включаем заново при каждом касании.
+
+  // Вернулся в приложение посреди тренировки: Safari иногда даёт включить сразу
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible' && state.session) keepAwake();
+  });
+
+  // Сигнал конца отдыха должен пробить беззвучный режим. Обычный звук сайта («ambient»)
+  // беззвучный режим глушит, «playback» нет, но может приостановить музыку.
+  // Поэтому «playback» включаем только на время сигнала и сразу возвращаем обратно.
+  var loudTimer = null;
+
+  function loudFor(seconds) {
+    var session = navigator.audioSession;
+    if (!session) return;
+    try {
+      session.type = 'playback';
+      clearTimeout(loudTimer);
+      loudTimer = setTimeout(function () {
+        try {
+          session.type = 'auto';
+        } catch (error) {
+          // ничего
+        }
+      }, seconds * 1000);
+    } catch (error) {
+      // браузер не умеет — играем как обычно
+    }
   }
 
   // Сигналы: без названия — двойной (конец отдыха, конец упражнения),
   // 'go' — один повыше (начинай держать), 'tick' — тихий отсчёт последних секунд
   var BEEPS = {
-    end: { at: [0, 0.24], hz: 880, gain: 0.25, len: 0.18 },
+    end: { at: [0, 0.24, 0.48], hz: 880, gain: 0.5, len: 0.18 },
     go: { at: [0], hz: 1046, gain: 0.3, len: 0.32 },
     tick: { at: [0], hz: 660, gain: 0.08, len: 0.08 }
   };
@@ -3701,7 +3940,9 @@
   function beep(kind) {
     if (!audio) return;
     var sound = BEEPS[kind] || BEEPS.end;
+    if (sound === BEEPS.end) loudFor(1.5);
     try {
+      if (audio.state === 'suspended') audio.resume();
       sound.at.forEach(function (offset) {
         var start = audio.currentTime + offset;
         var tone = audio.createOscillator();
@@ -3747,6 +3988,9 @@
     var xp = strengthXp(record);
     var fresh = justFinished === record.id;
     justFinished = null;
+    // Сегодняшняя силовая: сразу предлагаем заминку под мышцы дня
+    var cool = record.date === todayIso() ? cooldownRoutine(cooldownDay(record.place, record.workoutId)) : null;
+    if (cool && stretchDoneToday(cool.id)) cool = null;
 
     document.getElementById('detail-body').innerHTML =
       '<section class="done-card' + (fresh ? ' is-fresh' : '') + '">' +
@@ -3756,7 +4000,13 @@
       '<p class="done-sub">' + formatDate(record.date) +
       (record.complete ? '' : '. Очередь не сдвинулась: в следующий раз снова ' +
         escapeHtml(workoutShort(record.place, record.workoutId))) + '.</p>' +
-      (fresh ? '<a class="btn btn-light" href="#today">На гору</a>' : '') +
+      (cool
+        ? '<p class="done-next">Теперь заминка: ' + cool.items.length + ' ' + plural(cool.items.length, 'растяжка', 'растяжки', 'растяжек') +
+          ' на ' + escapeHtml(STRETCH.cooldown.days[cooldownDay(record.place, record.workoutId)].title.toLowerCase()) +
+          ', около ' + stretchMinutes(cool) + ' мин, +' + XP.stretch + ' опыта.</p>' +
+          '<div class="done-actions"><a class="btn btn-light" href="#stretch-run/' + cool.id + '">Начать заминку</a>' +
+          (fresh ? '<a class="btn btn-light-ghost" href="#today">Потом</a>' : '') + '</div>'
+        : fresh ? '<a class="btn btn-light" href="#today">На гору</a>' : '') +
       '</section>' +
       '<dl class="rows rows-flat">' + rows.join('') + '</dl>' +
       '<h2 class="group-title">Упражнения</h2>' +
@@ -4041,6 +4291,19 @@
 
   function finishRun() {
     var routine = run.routine;
+    // Разминка: ничего не записываем, просто переходим к упражнениям
+    if (routine.warmup) {
+      cancelAnimationFrame(runFrame);
+      clearInterval(runTimer);
+      run = null;
+      if (state.session) {
+        state.session.warm = null;
+        saveState();
+      }
+      beep();
+      location.replace('#session');
+      return;
+    }
     var counted = run.held / 1000 >= run.total / 2;
     var already = stretchDoneToday();
     if (counted) {
@@ -4092,7 +4355,8 @@
       box.innerHTML =
         '<div class="run">' +
         '<header class="run-top">' +
-        '<a class="run-close" href="#stretch/' + run.routine.id + '" aria-label="Остановить и выйти">' +
+        '<a class="run-close" href="' + (run.routine.warmup ? '#session' : '#stretch/' + run.routine.id) +
+        '" aria-label="' + (run.routine.warmup ? 'Выйти из разминки в тренировку' : 'Остановить и выйти') + '">' +
         '<svg class="icon" aria-hidden="true"><use href="#i-close" /></svg></a>' +
         '<ol class="run-steps" aria-label="Шаг ' + (run.index + 1) + ' из ' + run.steps.length + '">' +
         run.steps.map(function (item, index) {
@@ -4110,7 +4374,7 @@
         '<h1 class="run-title" id="run-title">' + escapeHtml(shownMove.name) + '</h1>' +
         (shown.side ? '<p class="run-side">' + shown.side + '</p>' : '') +
         '<p class="run-how">' + escapeHtml(shownMove.how) + '</p>' +
-        '<p class="run-feel">Тянется: ' + escapeHtml(shownMove.feel.toLowerCase()) + '</p>' +
+        '<p class="run-feel">' + (run.routine.warmup ? 'Работает' : 'Тянется') + ': ' + escapeHtml(shownMove.feel.toLowerCase()) + '</p>' +
         '</div>' +
         '<div class="run-controls">' +
         '<button class="run-btn" type="button" data-run="prev" aria-label="Предыдущее упражнение"' + (run.index === 0 && run.phase !== 'gap' ? ' disabled' : '') + '>' +
@@ -4146,7 +4410,7 @@
     var share = Math.max(0, Math.min(1, left / total));
     ring.style.strokeDashoffset = (RING * (1 - share)).toFixed(1);
     sec.textContent = Math.ceil(left / 1000);
-    label.textContent = run.paused ? 'пауза' : run.phase === 'hold' ? 'держи' : run.phase === 'ready' ? 'старт через' : 'переход';
+    label.textContent = run.paused ? 'пауза' : run.phase === 'hold' ? (run.routine.warmup ? 'двигайся' : 'держи') : run.phase === 'ready' ? 'старт через' : 'переход';
     button.classList.toggle('is-paused', run.paused);
     button.setAttribute('aria-label', run.paused ? 'Продолжить' : 'Пауза');
     var fill = document.getElementById('run-step-fill');

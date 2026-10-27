@@ -1435,6 +1435,90 @@ a.history-row:active {
   padding-inline: var(--s-5);
 }
 
+/* Дорожка и разминка перед подходами: карточка цвета силовых, три шага сверху */
+.warm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding: var(--s-4) var(--s-4) var(--s-3);
+  border-radius: var(--r-l);
+  background: var(--tile-strength);
+  color: var(--tile-strength-ink);
+}
+
+.warm-steps {
+  display: flex;
+  gap: var(--s-1);
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.warm-steps li {
+  flex: 1;
+  padding-block-start: var(--s-2);
+  border-block-start: 3px solid color-mix(in srgb, currentColor 22%, transparent);
+  opacity: 0.7;
+}
+
+.warm-steps .is-done {
+  border-color: color-mix(in srgb, currentColor 60%, transparent);
+}
+
+.warm-steps .is-now {
+  border-color: var(--ochre);
+  opacity: 1;
+}
+
+.warm-main {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+
+.warm-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.warm-text {
+  margin-block-start: var(--s-1);
+  font-size: 0.9375rem;
+  opacity: 0.85;
+}
+
+.warm-clock {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: 2.75rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.warm-clock.is-over {
+  color: var(--ochre);
+  font-size: 2rem;
+}
+
+.warm-skip {
+  align-self: center;
+  min-block-size: 44px;
+  padding-inline: var(--s-4);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  opacity: 0.8;
+}
+
 /* Шапка записи подходов: счётчик и полоса */
 .session-head {
   display: flex;
@@ -1522,6 +1606,22 @@ a.history-row:active {
 
 .done-card .btn-light {
   margin-block-start: var(--s-3);
+}
+
+/* Заминка после силовой: подсказка и две кнопки в карточке итога */
+.done-next {
+  margin-block-start: var(--s-3);
+  font-size: 0.9375rem;
+  opacity: 0.9;
+}
+
+.done-actions {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.done-actions .btn-light {
+  margin-block-start: 0;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -3462,39 +3562,42 @@ a.history-row:active {
   font-size: 0.75rem;
 }
 
-/* Текущий подход: поля с кнопками −/+ одно под другим, галочка справа во всю высоту */
+/* Цифры всех подходов по центру своей колонки: кг под кг, повторы под повторами */
+.set .field-input {
+  padding-inline: 30px;
+  text-align: center;
+}
+
+.set .set-none {
+  text-align: center;
+}
+
+/* Текущий подход: та же сетка, что у остальных. В колонке «+» над цифрой и «−» под ней,
+   галочка справа во всю высоту */
 .set.is-current {
-  grid-template-columns: 28px minmax(0, 1fr) 56px;
   align-items: stretch;
 }
 
-.set.is-current .set-no {
+.set.is-current .set-no,
+.set.is-current .set-none {
   align-self: center;
-}
-
-.steppers {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-  min-inline-size: 0;
 }
 
 .stepper {
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr) 52px;
+  grid-template-rows: 44px auto 44px;
   gap: 6px;
+  min-inline-size: 0;
 }
 
 .stepper .field-input {
-  padding: 0 38px 0 12px;
-  text-align: center;
   font-size: 1.25rem;
 }
 
 .step {
   display: grid;
   place-items: center;
-  min-block-size: 52px;
+  min-block-size: 44px;
   border: 0;
   border-radius: 14px;
   background: var(--bg-sunk);
@@ -3514,9 +3617,47 @@ a.history-row:active {
 }
 
 .set.is-current .set-done {
-  inline-size: 56px;
   block-size: auto;
   min-block-size: 52px;
+}
+
+/* «+ Подход» / «− Подход» */
+.set-count {
+  display: flex;
+  gap: var(--s-2);
+  padding-inline: calc(var(--s-2) + 28px + var(--s-2)) var(--s-2);
+}
+
+.set-count-btn {
+  display: inline-flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-block-size: 44px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background-color 180ms var(--ease-out), scale 220ms var(--ease-out);
+}
+
+.set-count-btn .icon {
+  inline-size: 16px;
+  block-size: 16px;
+  stroke-width: 2.4;
+}
+
+.set-count-btn:active:not(:disabled) {
+  scale: 0.96;
+  background: var(--bg-sunk);
+}
+
+.set-count-btn:disabled {
+  opacity: 0.4;
 }
 
 /* Замена упражнения */
@@ -3662,9 +3803,6 @@ a.history-row:active {
     font-size: 0.8125rem;
   }
 
-  .stepper {
-    grid-template-columns: 46px minmax(0, 1fr) 46px;
-  }
 }
 
 /* Кор: ссылка на папку курса, вводится один раз на устройстве */

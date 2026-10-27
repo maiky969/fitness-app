@@ -1087,6 +1087,53 @@ window.FITNESS_DATA = (function () {
   // Фото из той же базы free-exercise-db (exercises/<id>/0.jpg и 1.jpg).
   // ACSM советует растяжку минимум 2 раза в неделю, около 60 секунд на упражнение в сумме.
   var STRETCH_MOVES = {
+    // Динамическая разминка перед силовой: двигаемся, а не держим позу
+    Arm_Circles: {
+      name: 'Круги руками',
+      how: 'Руки в стороны на уровне плеч. Делай круги: половину времени вперёд, половину назад, постепенно шире.',
+      feel: 'Плечи'
+    },
+    Standing_Hip_Circles: {
+      name: 'Круги тазом',
+      how: 'Ноги на ширине плеч, руки на поясе. Веди таз по большому кругу. На середине времени смени направление.',
+      feel: 'Таз и поясница'
+    },
+    Bodyweight_Squat: {
+      name: 'Приседания без веса',
+      how: 'Ноги на ширине плеч, руки вперёд. Садись медленно, пятки не отрывай, спина прямая. 10–12 раз спокойно.',
+      feel: 'Ноги и ягодицы'
+    },
+    Bodyweight_Walking_Lunge: {
+      name: 'Выпады',
+      how: 'Шагни вперёд и опустись, пока заднее колено почти не коснётся пола. Встань и смени ногу. По 5 раз на каждую.',
+      feel: 'Бёдра и ягодицы'
+    },
+    Inchworm: {
+      name: 'Гусеница',
+      how: 'Стоя наклонись и поставь ладони на пол. Пройди руками вперёд до упора лёжа, потом мелкими шагами подойди ногами к рукам и встань. 4–5 раз.',
+      feel: 'Спина, задняя поверхность бедра, плечи'
+    },
+    // Растяжки для заминки после силовой в зале
+    Chest_And_Front_Of_Shoulder_Stretch: {
+      name: 'Палка за голову',
+      how: 'Возьми бодибар или гриф без блинов хватом чуть шире плеч. Руки прямые, медленно заведи палку вверх и за голову, насколько пускают плечи.',
+      feel: 'Грудь и передняя часть плеч'
+    },
+    Standing_Biceps_Stretch: {
+      name: 'Руки в замок за спиной',
+      how: 'Сцепи ладони за спиной, выпрями руки и разверни ладони вниз. Медленно подними руки назад и вверх, грудь вперёд.',
+      feel: 'Бицепс, грудь, передняя часть плеч'
+    },
+    One_Arm_Against_Wall: {
+      name: 'Локоть в стену',
+      how: 'Встань боком к стене или стойке. Согнутую руку поставь предплечьем на стену выше головы и мягко подайся корпусом вперёд и вниз.',
+      feel: 'Широчайшая мышца спины'
+    },
+    Elbows_Back: {
+      name: 'Локти назад',
+      how: 'Встань прямо, ладони на поясницу, пальцы вниз. Мягко своди локти назад, будто хочешь соединить их за спиной.',
+      feel: 'Грудь и передняя часть плеч'
+    },
     Cat_Stretch: {
       name: 'Кошка',
       how: 'Встань на четвереньки. Втяни живот и округли спину вверх, голову опусти.',
@@ -1247,6 +1294,85 @@ window.FITNESS_DATA = (function () {
         ]
       }
     ],
+    // Разминка перед силовой: после 5 минут дорожки, около 4,5 минут.
+    // Запускается из тренировки, в список комплексов растяжки не входит.
+    warmup: {
+      id: 'warmup',
+      title: 'Разминка',
+      warmup: true,
+      items: [
+        move('Arm_Circles', 30),
+        move('Standing_Hip_Circles', 30),
+        move('Bodyweight_Squat', 40),
+        move('Bodyweight_Walking_Lunge', 40),
+        move('Inchworm', 40),
+        move('Worlds_Greatest_Stretch', 30, true)
+      ]
+    },
+    // Заминка после силовой: свой набор под мышцы дня. Каждый раз берётся
+    // 5 упражнений со сдвигом по кругу, поэтому комплекс от раза к разу разный.
+    cooldown: {
+      size: 5,
+      days: {
+        chest: {
+          title: 'Грудь и бицепс',
+          about: 'Заминка после груди и бицепса',
+          items: [
+            move('Chest_And_Front_Of_Shoulder_Stretch', 30),
+            move('Standing_Biceps_Stretch', 30),
+            move('Elbows_Back', 30),
+            move('Shoulder_Stretch', 30, true),
+            move('Upward_Stretch', 30),
+            move('Standing_Lateral_Stretch', 30, true),
+            move('Childs_Pose', 40),
+            move('Cat_Stretch', 40)
+          ]
+        },
+        back: {
+          title: 'Спина и трицепс',
+          about: 'Заминка после спины и трицепса',
+          items: [
+            move('One_Arm_Against_Wall', 30, true),
+            move('Triceps_Stretch', 30, true),
+            move('Childs_Pose', 40),
+            move('Cat_Stretch', 40),
+            move('Middle_Back_Stretch', 20, true),
+            move('Side-Lying_Floor_Stretch', 30, true),
+            move('Upper_Back_Stretch', 30),
+            move('Knee_Across_The_Body', 30, true)
+          ]
+        },
+        legs: {
+          title: 'Ноги и плечи',
+          about: 'Заминка после ног и плеч',
+          items: [
+            move('On_Your_Side_Quad_Stretch', 30, true),
+            move('Seated_Floor_Hamstring_Stretch', 30, true),
+            move('Kneeling_Hip_Flexor', 30, true),
+            move('Ankle_On_The_Knee', 30, true),
+            move('Shoulder_Stretch', 30, true),
+            move('Calf_Stretch_Hands_Against_Wall', 30, true),
+            move('Runners_Stretch', 30, true),
+            move('The_Straddle', 40)
+          ]
+        },
+        full: {
+          title: 'Всё тело',
+          about: 'Заминка после тренировки на всё тело',
+          items: [
+            move('Runners_Stretch', 30, true),
+            move('Chest_And_Front_Of_Shoulder_Stretch', 30),
+            move('On_Your_Side_Quad_Stretch', 30, true),
+            move('One_Arm_Against_Wall', 30, true),
+            move('Ankle_On_The_Knee', 30, true),
+            move('Standing_Biceps_Stretch', 30),
+            move('Childs_Pose', 40),
+            move('Triceps_Stretch', 30, true),
+            move('Seated_Floor_Hamstring_Stretch', 30, true)
+          ]
+        }
+      }
+    },
     rules: [
       'Тянись до лёгкого натяжения, не до боли. Дыши спокойно, на выдохе можно чуть углубиться.',
       'Не пружинь: держи позу ровно всё время таймера.',
