@@ -2247,6 +2247,29 @@ a.history-row:active {
   font-size: 0.875rem;
 }
 
+.set-goal {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-inline: var(--s-3);
+  color: var(--ink-2);
+  font-size: 0.875rem;
+}
+
+.set-goal b {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.set-goal-link {
+  flex: none;
+  color: var(--forest);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .set-hint.is-up {
   color: var(--accent);
   font-weight: 600;

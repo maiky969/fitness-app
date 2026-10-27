@@ -1598,6 +1598,46 @@
     );
   }
 
+  // Упражнение в программе (подходы и диапазон повторов): сначала там, где делал в последний раз
+  function programEntry(exerciseId) {
+    var places = ['gym', 'home'];
+    var last = sortedWorkouts().filter(function (record) {
+      return record.items.some(function (item) {
+        return item.ex === exerciseId;
+      });
+    }).pop();
+    if (last) places.unshift(last.place);
+    for (var p = 0; p < places.length; p += 1) {
+      var program = DATA.programs[places[p]];
+      if (!program) continue;
+      for (var w = 0; w < program.workouts.length; w += 1) {
+        var found = program.workouts[w].items.filter(function (item) {
+          return item.ex === exerciseId;
+        })[0];
+        if (found) return { place: places[p], entry: found };
+      }
+    }
+    // Замена: берём диапазон того упражнения, вместо которого делал
+    var swapped = last && last.items.filter(function (item) {
+      return item.ex === exerciseId && item.swappedFrom;
+    })[0];
+    if (swapped) {
+      var origin = programEntry(swapped.swappedFrom);
+      if (origin) return { place: origin.place, entry: { ex: exerciseId, sets: origin.entry.sets, reps: origin.entry.reps, rest: origin.entry.rest } };
+    }
+    return null;
+  }
+
+  // «42,5 кг × 8 повторов» — что приложение поставит в следующий раз, или null
+  function nextGoal(exerciseId) {
+    var found = programEntry(exerciseId);
+    if (!found || isTimed(found.entry) || !autoPlan(exerciseId)) return null;
+    var plan = plannedSets(found.place, found.entry, found.entry.sets);
+    if (!plan) return null;
+    var work = plan[plan.length - 1];
+    return (typeof work.w === 'number' ? formatNum(work.w) + ' кг × ' : '') + work.r + ' ' + plural(work.r, 'повтор', 'повтора', 'повторов');
+  }
+
   function renderLift(exerciseId) {
     var exercise = DATA.exercises[exerciseId];
     var series = liftSeries(exerciseId);
@@ -1611,6 +1651,8 @@
     }, first);
 
     var rows = [row('Сейчас', formatNum(last.value) + ' ' + last.unit)];
+    var next = nextGoal(exerciseId);
+    if (next) rows.push(row('Следующая цель', next));
     if (series.length > 1 && sameUnit) {
       rows.push(row('Старт', formatNum(first.value) + ' ' + first.unit + ' · ' + formatDate(first.date)));
       rows.push(row('Лучший', formatNum(best.value) + ' ' + best.unit + ' · ' + formatDate(best.date)));
@@ -3051,6 +3093,11 @@
 
     if (!range) return { text: 'Цель: хотя бы на повтор больше, чем в прошлый раз.' };
 
+    // Цель на сегодня для рабочих подходов: w — вес (null без снаряда), r — повторы
+    function aim(w, r) {
+      return { w: w, r: r };
+    }
+
     var weight = body
       ? null
       : Math.max.apply(
@@ -3064,29 +3111,37 @@
     if (previous.length < entry.sets) {
       return {
         text: 'В прошлый раз подходов было меньше. ' + keep + 'Сделай ' +
-          (entry.sets === 2 ? 'оба подхода' : 'все ' + entry.sets + ' ' + plural(entry.sets, 'подход', 'подхода', 'подходов')) + '.'
+          (entry.sets === 2 ? 'оба подхода' : 'все ' + entry.sets + ' ' + plural(entry.sets, 'подход', 'подхода', 'подходов')) + '.',
+        target: aim(weight, 0)
       };
     }
 
+    // Повторы смотрим по рабочим подходам: лёгкий подход на технику не в счёт
+    var working = body
+      ? previous
+      : previous.filter(function (set) {
+          return set.w === weight;
+        });
     var lowest = Math.min.apply(
       null,
-      previous.map(function (set) {
+      working.map(function (set) {
         return set.r;
       })
     );
     if (lowest < range.hi) {
-      return { text: keep + 'Добавляй по повтору, пока не выйдет ' + range.hi + ' во всех подходах.' };
+      return { text: keep + 'Добавляй по повтору, пока не выйдет ' + range.hi + ' во всех подходах.', target: aim(weight, 1), cap: range.hi };
     }
 
     var reached = 'Все подходы по ' + range.hi + (lowest > range.hi ? ' и больше' : '') + '. ';
-    if (body) return { text: reached + 'Усложняй: опускайся медленно, на три счёта.', up: true };
+    if (body) return { text: reached + 'Усложняй: опускайся медленно, на три счёта.', up: true, target: aim(null, 0) };
 
     if (place !== 'home') {
       var heavier = Math.round((weight + weightStep(entry.ex)) * 100) / 100;
       var perDumbbell = /^Гантели/.test(DATA.exercises[entry.ex].gear) ? ' на гантель' : '';
       return {
         text: reached + 'Пора добавить: поставь ' + formatNum(heavier) + ' кг' + perDumbbell + ' и начни с ' + range.lo + ' повторов.',
-        up: true
+        up: true,
+        target: aim(heavier, range.lo)
       };
     }
 
@@ -3099,18 +3154,23 @@
     if (!next) {
       return {
         text: reached + 'Тяжелее из блинов не собрать. Вес тот же: добавляй повторы или опускай вес медленно, на три счёта.',
-        up: true
+        up: true,
+        target: aim(weight, 1),
+        cap: range.hi + EXTRA_REPS
       };
     }
     if ((next - weight) / weight > BIG_STEP && lowest < range.hi + EXTRA_REPS) {
       return {
         text: reached + 'Следующий вес ' + formatNum(next) + ' кг' + each + ', шаг большой. Сначала дойди до ' +
-          (range.hi + EXTRA_REPS) + ' повторов с ' + formatNum(weight) + ' кг.'
+          (range.hi + EXTRA_REPS) + ' повторов с ' + formatNum(weight) + ' кг.',
+        target: aim(weight, 1),
+        cap: range.hi + EXTRA_REPS
       };
     }
     return {
       text: reached + 'Пора добавить: поставь ' + formatNum(next) + ' кг' + each + ' и начни с ' + range.lo + ' повторов.',
-      up: true
+      up: true,
+      target: aim(next, range.lo)
     };
   }
 
@@ -3137,11 +3197,58 @@
 
   // Подходы для упражнения: вес и повторы подставляются с прошлого раза.
   // Хранятся текстом, как их набрал Игрок.
-  function freshSets(exerciseId, count) {
-    var previous = lastSetsFor(exerciseId) || [];
-    var sets = [];
+  // Первые разы упражнения Игрок ставит веса сам (смотрит по самочувствию),
+  // дальше приложение само ставит вес и повторы по правилу роста.
+  var AUTO_AFTER = 2;
+
+  function timesDone(exerciseId) {
+    return state.workouts.filter(function (record) {
+      return record.items.some(function (item) {
+        return item.ex === exerciseId && item.sets.length;
+      });
+    }).length;
+  }
+
+  function autoPlan(exerciseId) {
+    return timesDone(exerciseId) >= AUTO_AFTER;
+  }
+
+  // План подходов на сегодня по правилу роста. Лёгкий первый подход (на технику)
+  // остаётся как был, рабочие получают цель. null — цели нет, берём прошлый раз.
+  // Возвращает [{ w, r }] по числу подходов.
+  function plannedSets(place, entry, count) {
+    var previous = lastSetsFor(entry.ex);
+    if (!previous || !autoPlan(entry.ex)) return null;
+    var hint = progressHint(place, entry, previous);
+    if (!hint || !hint.target) return null;
+    var target = hint.target;
+    var working = Math.max.apply(null, previous.map(function (set) {
+      return typeof set.w === 'number' ? set.w : 0;
+    }));
+    var plan = [];
     for (var index = 0; index < count; index += 1) {
       var before = previous[index] || previous[previous.length - 1];
+      var light = index === 0 && typeof before.w === 'number' && before.w < working && previous.length > 1;
+      if (light) {
+        plan.push({ w: before.w, r: before.r });
+        continue;
+      }
+      // r > 1 — новые повторы после прибавки веса; 1 — плюс повтор; 0 — как в прошлый раз
+      var reps = target.r > 1 ? target.r : before.r + target.r;
+      if (hint.cap) reps = Math.min(reps, Math.max(hint.cap, before.r));
+      plan.push({ w: target.w, r: reps });
+    }
+    return plan;
+  }
+
+  // Подходы для упражнения: с третьего раза — по плану роста,
+  // до этого вес и повторы подставляются с прошлого раза. Хранятся текстом.
+  function freshSets(place, entry, count) {
+    var previous = lastSetsFor(entry.ex) || [];
+    var plan = plannedSets(place, entry, count);
+    var sets = [];
+    for (var index = 0; index < count; index += 1) {
+      var before = plan ? plan[index] : previous[index] || previous[previous.length - 1];
       sets.push({
         w: before && typeof before.w === 'number' ? formatNum(before.w) : '',
         r: before ? formatNum(before.r) : '',
@@ -3165,7 +3272,7 @@
       warm: 'tread',
       treadEndsAt: Date.now() + TREAD_MINUTES * 60000,
       items: workout.items.map(function (entry) {
-        return { ex: entry.ex, sets: freshSets(entry.ex, entry.sets) };
+        return { ex: entry.ex, sets: freshSets(place, entry, entry.sets) };
       })
     };
     saveState();
@@ -3241,6 +3348,29 @@
       '<button class="step" type="button" data-step="-1" aria-label="Меньше: ' + what + '">' +
       '<svg class="icon" aria-hidden="true"><use href="#i-minus" /></svg></button>' +
       '</div>'
+    );
+  }
+
+  // Строка под подсказкой: цель на сегодня и ссылка на график,
+  // а пока Игрок ставит веса сам — сколько раз ещё осталось
+  function goalLine(place, entry, previous, count) {
+    if (!previous || isTimed(entry)) return '';
+    var chart = liftSeries(entry.ex).length > 1
+      ? '<a class="set-goal-link" href="#lift/' + encodeURIComponent(entry.ex) + '">График</a>'
+      : '';
+    if (!autoPlan(entry.ex)) {
+      var left = AUTO_AFTER - timesDone(entry.ex);
+      return (
+        '<p class="set-goal"><span>Веса ставишь сам: ещё ' + left + ' ' + plural(left, 'раз', 'раза', 'раз') +
+        ', потом приложение будет ставить их за тебя.</span>' + chart + '</p>'
+      );
+    }
+    var plan = plannedSets(place, entry, count);
+    if (!plan) return chart ? '<p class="set-goal"><span></span>' + chart + '</p>' : '';
+    var work = plan[plan.length - 1];
+    var aim = (typeof work.w === 'number' ? formatNum(work.w) + ' кг × ' : '') + work.r + ' ' + plural(work.r, 'повтор', 'повтора', 'повторов');
+    return (
+      '<p class="set-goal"><span>Цель сегодня: <b class="num">' + aim + '</b>. Уже стоит в подходах.</span>' + chart + '</p>'
     );
   }
 
@@ -3479,6 +3609,7 @@
             ? '<p class="set-prev num">Прошлый раз: ' + setsSummary(previous, timed) + '</p>'
             : '') +
           (hint ? '<p class="set-hint num' + (hint.up ? ' is-up' : '') + '">' + escapeHtml(hint.text) + '</p>' : '') +
+          goalLine(session.place, entry, previous, sets.length) +
           '<ol class="sets">' + rows + '</ol>' + setControls(exIndex, sets) + '</section>'
         );
       })
@@ -3659,7 +3790,8 @@
     var item = state.session.items[exIndex];
     if (!DATA.exercises[to] || item.sets.some(function (set) { return set.done; })) return;
     item.ex = to;
-    item.sets = freshSets(to, item.sets.length);
+    var base = sessionEntry(exIndex);
+    item.sets = freshSets(state.session.place, { ex: to, sets: base.sets, reps: base.reps, rest: base.rest }, item.sets.length);
     swapOpen = null;
     saveState();
     renderSession({ swap: exIndex });
