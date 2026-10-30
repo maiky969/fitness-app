@@ -2379,6 +2379,16 @@ a.history-row:active {
   grid-column: 2 / -1;
 }
 
+/* «был 40 × 10» — тот же подход с прошлой такой же тренировки, под полями */
+.set-was {
+  grid-column: 2 / 4;
+  margin-block-start: calc(var(--s-1) * -1);
+  color: var(--ink-3);
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  text-align: center;
+}
+
 .field-error,
 .form-error {
   color: var(--bad);

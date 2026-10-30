@@ -3028,6 +3028,34 @@
     return null;
   }
 
+  // Подходы упражнения с прошлой такой же тренировки: в зале тот же день
+  // («Грудь + бицепс» из любого блока), дома та же тренировка. null — не было.
+  function lastSameSets(place, workoutId, exerciseId) {
+    var workout = findWorkout(place, workoutId);
+    var day = workout && workout.day;
+    var list = sortedWorkouts();
+    for (var index = list.length - 1; index >= 0; index -= 1) {
+      var record = list[index];
+      if (record.place !== place) continue;
+      if (day) {
+        var other = findWorkout(place, record.workoutId);
+        if (!other || other.day !== day) continue;
+      } else if (record.workoutId !== workoutId) {
+        continue;
+      }
+      var found = record.items.filter(function (item) {
+        return item.ex === exerciseId && item.sets.length;
+      })[0];
+      if (found) return found.sets;
+    }
+    return null;
+  }
+
+  // «был 40 × 10», «был 12» (свой вес), «был 40 с»
+  function wasText(set, timed) {
+    return 'был ' + (typeof set.w === 'number' ? formatNum(set.w) + ' × ' : '') + formatNum(set.r) + (timed ? ' с' : '');
+  }
+
   // Упражнения без снаряда: вес не спрашиваем
   function isBodyweight(exerciseId) {
     return /^(Свой вес|Турник|Брусья)/.test(DATA.exercises[exerciseId].gear);
@@ -3546,6 +3574,7 @@
         var previous = lastSetsFor(entry.ex);
         var hint = progressHint(session.place, entry, previous);
         var sets = session.items[exIndex].sets;
+        var same = lastSameSets(session.place, session.workoutId, entry.ex);
         var hasCurrent = !currentFound && sets.some(function (set) {
           return !set.done;
         });
@@ -3583,6 +3612,10 @@
               fields +
               '<button class="set-done" type="button" aria-pressed="' + set.done + '" aria-label="Подход ' +
               number + ' сделан"><svg class="icon" aria-hidden="true"><use href="#i-check" /></svg></button>' +
+              (same && same[setIndex]
+                ? '<span class="set-was num"><span class="sr-only">Прошлый раз в этом подходе: </span>' +
+                  wasText(same[setIndex], timed) + '</span>'
+                : '') +
               '<p class="field-error" role="alert" hidden></p></li>'
             );
           })
